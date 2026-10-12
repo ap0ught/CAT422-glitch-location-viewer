@@ -346,7 +346,7 @@ control = {
                 //  In future we will get this from the sign-post connection information
                 var arrival = control.pendingArrival;
                 if (arrival && arrival.roomId === control.currentRoomId && Number.isFinite(arrival.x) && Number.isFinite(arrival.y)) {
-                    player.setPosition(arrival.x - parseInt(room.dynamic.l, 10), arrival.y - parseInt(room.dynamic.t, 10));
+                    player.setPosition(arrival.x - parseInt(room.dynamic.l, 10), parseInt(room.dynamic.b, 10) - arrival.y);
                 } else {
                     player.setPosition(parseInt(layer.w, 10) / 2 + 100, 100);
                 }
