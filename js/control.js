@@ -11,6 +11,7 @@ control = {
 
     gameObject: {},
     currentRoomId: null,
+    pendingArrival: null,
     percentageOf: 9999999,
     
     //  We are putting these here, because although we can figure them out
@@ -55,6 +56,7 @@ control = {
     This is supposed to load in the next room
     */
     loadRoom: function(roomId) {
+        roomId = String(roomId).replace(/^L/, 'G');
 
 
         control.loadtime.start = new Date();
@@ -342,7 +344,13 @@ control = {
                 //  For the moment, set the player position to be half the stage
                 //  and 300 from the bottom.
                 //  In future we will get this from the sign-post connection information
-                player.setPosition(parseInt(layer.w, 10) / 2 + 100, 100);
+                var arrival = control.pendingArrival;
+                if (arrival && arrival.roomId === control.currentRoomId && Number.isFinite(arrival.x) && Number.isFinite(arrival.y)) {
+                    player.setPosition(arrival.x - parseInt(room.dynamic.l, 10), parseInt(room.dynamic.b, 10) - arrival.y);
+                } else {
+                    player.setPosition(parseInt(layer.w, 10) / 2 + 100, 100);
+                }
+                control.pendingArrival = null;
                 newLayer.append(playerSprite);
 
                 //  tell the backend we've moved rooms
@@ -387,6 +395,7 @@ control = {
                         id: connection.tsid.replace('L','G'),
                         href: '#/' + connection.tsid
                     }).text(connection.label));
+                    exitLink.find('a').data('arrival', {roomId: connection.tsid.replace(/^L/, 'G'), x: Number(connection.x), y: Number(connection.y)});
                     exitList.append(exitLink);
                 }
             }
@@ -395,8 +404,12 @@ control = {
         //  pop the exits on
         $('.exits').append($('<h2>').text('Exits'));
         $('.exits').append(exitList);
-        $('.exits a').bind('click', function() {
-            control.loadRoom($(this).attr('id'));
+        $('.exits a').bind('click', function(event) {
+            event.preventDefault();
+            var destination = $(this).data('arrival');
+            control.pendingArrival = destination;
+            window.location.hash = '#/' + destination.roomId;
+            control.loadRoom(destination.roomId);
         });
 
         //  Tell the player that it's loaded

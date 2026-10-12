@@ -1,0 +1,1070 @@
+{
+  "schemaVersion": 1,
+  "roomId": "GIFPD818SEI26JR",
+  "label": "Baram Sum",
+  "coordinateSystem": "Original Glitch world coordinates (x,y), not canvas pixels",
+  "bounds": {
+    "l": -3000,
+    "r": 3000,
+    "t": -1000,
+    "b": 0
+  },
+  "lines": [
+    {
+      "id": "plat_1323110290282",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -254,
+        "x": 241
+      },
+      "end": {
+        "name": "end",
+        "y": -272,
+        "x": 285
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290225",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -191,
+        "x": -2278
+      },
+      "end": {
+        "name": "end",
+        "y": -190,
+        "x": -2222
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290232",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -338,
+        "x": -2381
+      },
+      "end": {
+        "name": "end",
+        "y": -349,
+        "x": -2289
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290279",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -304,
+        "x": 328
+      },
+      "end": {
+        "name": "end",
+        "y": -304,
+        "x": 411
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287245",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -215,
+        "x": -12
+      },
+      "end": {
+        "name": "end",
+        "y": -212,
+        "x": 24
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290297",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -275,
+        "x": 1512
+      },
+      "end": {
+        "name": "end",
+        "y": -267,
+        "x": 1733
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290231",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -169,
+        "x": -2015
+      },
+      "end": {
+        "name": "end",
+        "y": -176,
+        "x": -1771
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290296",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -273,
+        "x": 1330
+      },
+      "end": {
+        "name": "end",
+        "y": -275,
+        "x": 1512
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290331",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -433,
+        "x": -1573
+      },
+      "end": {
+        "name": "end",
+        "y": -444,
+        "x": -1426
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290224",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -180,
+        "x": -2304
+      },
+      "end": {
+        "name": "end",
+        "y": -191,
+        "x": -2278
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290304",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -194,
+        "x": 2505
+      },
+      "end": {
+        "name": "end",
+        "y": -181,
+        "x": 2594
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290262",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -491,
+        "x": 197
+      },
+      "end": {
+        "name": "end",
+        "y": -493,
+        "x": 475
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290305",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -181,
+        "x": 2594
+      },
+      "end": {
+        "name": "end",
+        "y": -149,
+        "x": 2850
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290330",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -444,
+        "x": -1426
+      },
+      "end": {
+        "name": "end",
+        "y": -428,
+        "x": -1139
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287247",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -229,
+        "x": 127
+      },
+      "end": {
+        "name": "end",
+        "y": -234,
+        "x": 215
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290222",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -187,
+        "x": -2345
+      },
+      "end": {
+        "name": "end",
+        "y": -179,
+        "x": -2322
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290363",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -236,
+        "x": 2180
+      },
+      "end": {
+        "name": "end",
+        "y": -215,
+        "x": 2266
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290265",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -327,
+        "x": 431
+      },
+      "end": {
+        "name": "end",
+        "y": -346,
+        "x": 537
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290268",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -332,
+        "x": 888
+      },
+      "end": {
+        "name": "end",
+        "y": -291,
+        "x": 1118
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290234",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -356,
+        "x": -2067
+      },
+      "end": {
+        "name": "end",
+        "y": -323,
+        "x": -1716
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290237",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -188,
+        "x": -1655
+      },
+      "end": {
+        "name": "end",
+        "y": -194,
+        "x": -1526
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290229",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -176,
+        "x": -2095
+      },
+      "end": {
+        "name": "end",
+        "y": -175,
+        "x": -2028
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290227",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -192,
+        "x": -2168
+      },
+      "end": {
+        "name": "end",
+        "y": -187,
+        "x": -2111
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290220",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -212,
+        "x": -2470
+      },
+      "end": {
+        "name": "end",
+        "y": -203,
+        "x": -2394
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290285",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -193,
+        "x": -148
+      },
+      "end": {
+        "name": "end",
+        "y": -205,
+        "x": -53
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290281",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -272,
+        "x": 285
+      },
+      "end": {
+        "name": "end",
+        "y": -296,
+        "x": 310
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290329",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -428,
+        "x": -1139
+      },
+      "end": {
+        "name": "end",
+        "y": -380,
+        "x": -884
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290218",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -196,
+        "x": -2998
+      },
+      "end": {
+        "name": "end",
+        "y": -196,
+        "x": -2860
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290230",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -175,
+        "x": -2028
+      },
+      "end": {
+        "name": "end",
+        "y": -169,
+        "x": -2015
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290223",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -179,
+        "x": -2322
+      },
+      "end": {
+        "name": "end",
+        "y": -180,
+        "x": -2304
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290263",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -493,
+        "x": 475
+      },
+      "end": {
+        "name": "end",
+        "y": -475,
+        "x": 623
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287246",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -212,
+        "x": 24
+      },
+      "end": {
+        "name": "end",
+        "y": -220,
+        "x": 86
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290233",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -349,
+        "x": -2289
+      },
+      "end": {
+        "name": "end",
+        "y": -356,
+        "x": -2067
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290228",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -187,
+        "x": -2111
+      },
+      "end": {
+        "name": "end",
+        "y": -176,
+        "x": -2095
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290240",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -424,
+        "x": -1673
+      },
+      "end": {
+        "name": "end",
+        "y": -425,
+        "x": -1610
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290302",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -238,
+        "x": 2033
+      },
+      "end": {
+        "name": "end",
+        "y": -236,
+        "x": 2180
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290332",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -425,
+        "x": -1610
+      },
+      "end": {
+        "name": "end",
+        "y": -433,
+        "x": -1573
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290300",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -267,
+        "x": 1733
+      },
+      "end": {
+        "name": "end",
+        "y": -251,
+        "x": 1896
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290254",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -179,
+        "x": -1149
+      },
+      "end": {
+        "name": "end",
+        "y": -158,
+        "x": -818
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290303",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -215,
+        "x": 2266
+      },
+      "end": {
+        "name": "end",
+        "y": -194,
+        "x": 2505
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287248",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -220,
+        "x": 86
+      },
+      "end": {
+        "name": "end",
+        "y": -229,
+        "x": 127
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290239",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -195,
+        "x": -1355
+      },
+      "end": {
+        "name": "end",
+        "y": -179,
+        "x": -1149
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290267",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -348,
+        "x": 668
+      },
+      "end": {
+        "name": "end",
+        "y": -332,
+        "x": 888
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290280",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -296,
+        "x": 310
+      },
+      "end": {
+        "name": "end",
+        "y": -304,
+        "x": 328
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290266",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -346,
+        "x": 537
+      },
+      "end": {
+        "name": "end",
+        "y": -348,
+        "x": 668
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290255",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -158,
+        "x": -818
+      },
+      "end": {
+        "name": "end",
+        "y": -162,
+        "x": -590
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290238",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -194,
+        "x": -1526
+      },
+      "end": {
+        "name": "end",
+        "y": -195,
+        "x": -1355
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290333",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -217,
+        "x": -2580
+      },
+      "end": {
+        "name": "end",
+        "y": -212,
+        "x": -2470
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290328",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -380,
+        "x": -884
+      },
+      "end": {
+        "name": "end",
+        "y": -354,
+        "x": -852
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290226",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -190,
+        "x": -2222
+      },
+      "end": {
+        "name": "end",
+        "y": -192,
+        "x": -2168
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290256",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -162,
+        "x": -590
+      },
+      "end": {
+        "name": "end",
+        "y": -184,
+        "x": -338
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290283",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -234,
+        "x": 215
+      },
+      "end": {
+        "name": "end",
+        "y": -254,
+        "x": 241
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287238",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -205,
+        "x": -53
+      },
+      "end": {
+        "name": "end",
+        "y": -215,
+        "x": -32
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290301",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -251,
+        "x": 1896
+      },
+      "end": {
+        "name": "end",
+        "y": -238,
+        "x": 2033
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290260",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -446,
+        "x": -79
+      },
+      "end": {
+        "name": "end",
+        "y": -469,
+        "x": 22
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290261",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -469,
+        "x": 22
+      },
+      "end": {
+        "name": "end",
+        "y": -491,
+        "x": 197
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290306",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -149,
+        "x": 2850
+      },
+      "end": {
+        "name": "end",
+        "y": -149,
+        "x": 2999
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290269",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -291,
+        "x": 1118
+      },
+      "end": {
+        "name": "end",
+        "y": -273,
+        "x": 1330
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290257",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -184,
+        "x": -338
+      },
+      "end": {
+        "name": "end",
+        "y": -193,
+        "x": -148
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290221",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -203,
+        "x": -2394
+      },
+      "end": {
+        "name": "end",
+        "y": -187,
+        "x": -2345
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290249",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -354,
+        "x": -852
+      },
+      "end": {
+        "name": "end",
+        "y": -343,
+        "x": -741
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290334",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -196,
+        "x": -2860
+      },
+      "end": {
+        "name": "end",
+        "y": -217,
+        "x": -2580
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290235",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -323,
+        "x": -1716
+      },
+      "end": {
+        "name": "end",
+        "y": -319,
+        "x": -1680
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1331854287244",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -215,
+        "x": -32
+      },
+      "end": {
+        "name": "end",
+        "y": -215,
+        "x": -12
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290278",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -304,
+        "x": 411
+      },
+      "end": {
+        "name": "end",
+        "y": -327,
+        "x": 431
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    },
+    {
+      "id": "plat_1323110290236",
+      "layerId": "middleground",
+      "start": {
+        "name": "start",
+        "y": -176,
+        "x": -1771
+      },
+      "end": {
+        "name": "end",
+        "y": -188,
+        "x": -1655
+      },
+      "itemPermission": -1,
+      "playerPermission": -1
+    }
+  ]
+}

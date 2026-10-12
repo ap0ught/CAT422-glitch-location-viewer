@@ -106,7 +106,7 @@
             var startRoom = 'GLIERMJ93DE1H25';
             //  Really poor way of doing URL stuff, but what the heck
             try {
-                startRoom = document.location.hash.split('/')[1].replace('L','G');
+                startRoom = document.location.hash.split('/')[1].replace(/^L/, 'G');
             } catch(er) {
                 //  Nowt!
             }
