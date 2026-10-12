@@ -390,7 +390,14 @@ player = {
         if (player.loaded === false) {
             return;
         }
-        
+
+        //  Render mode: freeze the frame. Keep the room scaled in place
+        //  and skip the parallax/scroll/player transforms.
+        if (control.renderMode) {
+            $('.stage').css('transform', 'scale(' + control.renderScale + ')');
+            return;
+        }
+
         var middleGroundOffset = player.position.x - (control.stageHolderWidth / 2);
         if (middleGroundOffset < 0) middleGroundOffset = 0;
         if (middleGroundOffset > control.stageWidth - control.stageHolderWidth) middleGroundOffset = control.stageWidth - control.stageHolderWidth;

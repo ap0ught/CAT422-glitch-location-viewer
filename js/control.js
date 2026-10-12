@@ -690,6 +690,31 @@ control = {
         control.loadtime.end = new Date();
         console.log('Load time: ' + (control.loadtime.end - control.loadtime.start) + 'ms');
 
+        //  Render mode for headless capture: add ?render=1 to the URL
+        //  (optionally &w=2000 to scale the room to a target width).
+        //  Anchors the stage at the top-left, hides the UI, and sets
+        //  __RENDER_READY__ / __RENDER_W / __RENDER_H so a screenshot
+        //  tool can clip exactly to the whole room.
+        if (/[?&]render=1\b/.test(location.search)) {
+            control.renderMode = true;
+            var rwMatch = location.search.match(/[?&]w=(\d+)/);
+            var targetW = rwMatch ? parseInt(rwMatch[1], 10) : control.stageWidth;
+            control.renderScale = Math.min(1, targetW / control.stageWidth);
+            var rk = control.renderScale;
+            $('.loading_holder, .exits, .debug, .offScreenBuffer, .nameChange, .globalChat, .localChat, .instructions, .player_holder, .player').hide();
+            $('.stage').css({
+                'position': 'fixed',
+                'left': 0,
+                'top': 0,
+                'z-index': 1,
+                'transform': 'scale(' + rk + ')',
+                'transform-origin': 'top left'
+            });
+            window.__RENDER_W = Math.round(control.stageWidth * rk);
+            window.__RENDER_H = Math.round(control.stageHeight * rk);
+            window.__RENDER_READY__ = true;
+        }
+
     },
 
     //  COLOUR TINT CODE FROM:
