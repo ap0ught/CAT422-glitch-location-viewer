@@ -1,9 +1,9 @@
 CAT422-glitch-location-viewer
 =============================
 
-![Landscape](http://revdancatt.github.io/CAT422-glitch-location-viewer/img/landscape1.jpg)
+![Landscape](img/landscape1.jpg)
 
-This code is an attempt to bring Glitch landscapes back to life, and maybe even eventually walk around them and chat with other people. In the meantime try out the viewer here, maybe it'll work!: http://mvurxi.com
+This code is an attempt to bring Glitch landscapes back to life, and maybe even eventually walk around them and chat with other people. The original live server (mvurxi.com) is offline; this copy is served from the repo's GitHub Pages site.
 
 Read the blogpost ["Rebuilding Ur, bringing back the beauty of Glitch locations"](http://revdancatt.com/2013/11/26/slowly-bringing-glitch-back-to-life/) for more information.
 
@@ -11,7 +11,7 @@ See the TODO list down at the end for more information
 
 ## Viewer
 
-The viewer is here: http://mvurxi.com and is just an example of how you can load in the location .json files and render thelandscape with the .png files.
+The viewer (this repo's GitHub Pages site) is just an example of how you can load in the location .json files and render thelandscape with the .png files.
 
 Its not tested on all browsers and is for demo purposes only.
 
@@ -27,7 +27,7 @@ Each file has two formats `.json` and `.callback.json`. The `.json` file is what
 
 If you want to load the data into javascript from github, then use the `.callback.json` files, in jQuery you would do something like this...
 
-`$.getScript('http://revdancatt.github.io/CAT422-glitch-location-viewer/locations/GLIERMJ93DE1H25.callback.json');`
+`x'locations/GLIERMJ93DE1H25.callback.json');`
 
 ...which has a built in callback, you'll need a root function getRoom, rather like this...
 
@@ -43,9 +43,9 @@ Nearly all the scenery objects (_not sprites and other characters & objects_) ha
 
 Note the directory structure has been flattened, all the .pngs now sit in a single directory `/img/scenery`.
 
-[Example Image would be here](http://revdancatt.github.io/CAT422-glitch-location-viewer/img/scenery/house_medium_01.png)
+[Example Image would be here](img/scenery/house_medium_01.png)
 
-![Example Image would be here](http://revdancatt.github.io/CAT422-glitch-location-viewer/img/scenery/house_medium_01.png)
+![Example Image would be here](img/scenery/house_medium_01.png)
 
 ## Tools
 

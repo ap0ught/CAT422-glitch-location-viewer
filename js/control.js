@@ -91,7 +91,7 @@ control = {
         //  ...without needing to worry about cross-domain stuff.
         //  Note that we're loading the room
         this.loadingRoom = true;
-        $.getScript('http://revdancatt.github.io/CAT422-glitch-location-viewer/locations/' + roomId + '.callback.json');
+        $.getScript('locations/' + roomId + '.callback.json');
 
     },
 
@@ -652,7 +652,7 @@ control = {
         //  Now attach the image to the offscreen buffer
         //  and load it.
         $('.offscreenBuffer').append(newImg);
-        newImg.attr('src', 'http://revdancatt.github.io/CAT422-glitch-location-viewer/img/scenery/' + item.filename + '.png');
+        newImg.attr('src', 'img/scenery/' + item.filename + '.png');
 
     },
 
