@@ -759,7 +759,7 @@ control = {
             var targetW = rwMatch ? parseInt(rwMatch[1], 10) : control.stageWidth;
             control.renderScale = Math.min(1, targetW / control.stageWidth);
             var rk = control.renderScale;
-            $('.loading_holder, .exits, .debug, .offScreenBuffer, .nameChange, .globalChat, .localChat, .instructions, .player_holder, .player').hide();
+            $('.loading_holder, .exits, .debug, .offScreenBuffer, .worldMap, .player_holder, .player').hide();
             $('.stage').css({
                 'position': 'fixed',
                 'left': 0,

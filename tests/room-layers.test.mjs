@@ -88,7 +88,7 @@ function viewer(search = '?render=1') {
                 text(value) { this.content = value; return this; },
                 empty() { return this; },
                 fadeOut() { return this; },
-                hide() { return this; },
+                hide() { this.hidden = true; return this; },
                 stop() { return this; },
                 fadeTo() { return this; },
                 remove() { return this; },
@@ -122,7 +122,7 @@ function viewer(search = '?render=1') {
 
 test('render readiness publishes layers and omissions, with platforms only when requested', () => {
     for (const search of ['?render=1&w=2000', '?render=1&platforms=1']) {
-        const {context} = viewer(search);
+        const {context, elements} = viewer(search);
         const {control, window} = context;
         control.noteSkipped('middleground', 'missing_tree', 'missing-png');
         let ready = false;
@@ -135,6 +135,8 @@ test('render readiness publishes layers and omissions, with platforms only when 
         });
         control.finishLevel();
         assert.equal(ready, true);
+        assert.ok([...elements].some(([selector, element]) =>
+            selector.split(', ').includes('.worldMap') && element.hidden));
         assert.equal(window.__RENDER_SKIPPED__, window.__RENDER_LAYERS__.dropped);
         assert.equal(window.__RENDER_W, search.includes('w=2000') ? 2000 : 6000);
         assert.equal('__RENDER_PLATFORMS__' in window, search.includes('platforms=1'));

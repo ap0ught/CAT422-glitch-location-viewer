@@ -226,7 +226,7 @@ html, body {
     padding: 6px;
 }
 
-.instructions {
+.worldMap {
     position: fixed;
     top: 4px;
     right: 4px;
@@ -239,9 +239,19 @@ html, body {
     background: rgba(255, 255, 255, 0.75);
 }
 
-.instructions h2 {
-    margin-top: 64px;
-    margin-bottom: 64px;
+.worldMap h2 {
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.worldMap ul {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+}
+
+.worldMap li {
+    margin: 16px 0;
 }
 
 .globalChat,

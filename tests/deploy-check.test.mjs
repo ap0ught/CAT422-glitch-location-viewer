@@ -68,6 +68,22 @@ test('the default room (no URL hash) exists', () => {
     assert.ok(fs.existsSync(path.join(locationsDir, roomId + '.callback.json')), roomId + '.callback.json missing');
 });
 
+test('the sidebar links to all eight Metroid world streets instead of retired chats', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    const sidebar = html.match(/<nav class="worldMap"[^>]*>([\s\S]*?)<\/nav>/);
+    assert.ok(sidebar, 'world map sidebar missing');
+    assert.match(sidebar[1], /href="https:\/\/github.com\/ap0ught\/puzzle-workshop\/issues\/14"/);
+    const roomIds = [...sidebar[1].matchAll(/href="#\/([A-Z0-9]+)"/g)].map(m => m[1]);
+    assert.deepEqual(roomIds, [
+        'GIFPD818SEI26JR', 'GIF44E96U4I2OQK', 'GA9QR2STO832N8E', 'GDOC74759ST2IG1',
+        'GHF70EIUS0D3RDM', 'GA524M0OMOE2OGT', 'GM413SQ6LRN58', 'GM410QQ0CHARO'
+    ]);
+    for (const roomId of roomIds) {
+        assert.ok(fs.existsSync(path.join(locationsDir, roomId + '.callback.json')));
+    }
+    assert.doesNotMatch(html, /class="(?:globalChat|localChat|nameChange|instructions)"/);
+});
+
 test('scenery image gap (informational - viewer tolerates missing PNGs)', () => {
     const missing = new Set();
     for (const f of roomFiles) {
