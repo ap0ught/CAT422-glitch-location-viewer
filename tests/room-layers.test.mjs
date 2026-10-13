@@ -144,7 +144,7 @@ test('render readiness publishes layers and omissions, with platforms only when 
         control.finishLevel();
         assert.equal(ready, true);
         assert.ok([...elements].some(([selector, element]) =>
-            selector.split(', ').includes('.worldMap') && element.hidden));
+            selector.split(', ').includes('.instructions') && element.hidden));
         assert.equal(window.__RENDER_SKIPPED__, window.__RENDER_LAYERS__.dropped);
         assert.equal(window.__RENDER_W, search.includes('w=2000') ? 2000 : 6000);
         assert.equal('__RENDER_PLATFORMS__' in window, search.includes('platforms=1'));

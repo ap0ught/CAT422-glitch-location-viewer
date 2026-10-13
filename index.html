@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8" />
     <title>MVURXI</title>
-    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.8" />
+    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.9" />
 </head>
 <body>
 
@@ -35,26 +35,66 @@
     <div class="offScreenBuffer">
     </div>
 
-    <nav class="worldMap" aria-label="Metroid world streets">
-        <h2>Metroid world</h2>
-        <p><a href="https://github.com/ap0ught/puzzle-workshop/issues/14">World map and progression</a></p>
-        <ul>
-            <li><a href="#/GIFPD818SEI26JR">Baram Sum — Balance Scales</a></li>
-            <li><a href="#/GIF44E96U4I2OQK">Keidler Caims — Forest Camp</a></li>
-            <li><a href="#/GA9QR2STO832N8E">Malika Whim — Waterworks</a></li>
-            <li><a href="#/GDOC74759ST2IG1">Autumn Lodge — The Slider</a></li>
-            <li><a href="#/GHF70EIUS0D3RDM">Icicle Dangles — Beam Routing</a></li>
-            <li><a href="#/GA524M0OMOE2OGT">BloodyHell — Lights Out</a></li>
-            <li><a href="#/GM413SQ6LRN58">East Spice — Electrical Circuit</a></li>
-            <li><a href="#/GM410QQ0CHARO">Flipside — Gear Machine</a></li>
-        </ul>
-        <a class="layerControlsToggle" href="#layerControls" aria-controls="layerControls" aria-expanded="false">Enable/disable layers</a>
+    <div class="nameChange">
+        <strong>Change name:</strong><br />
+        <input name="newName" class="newName" type="text" disabled></input><button disabled>Set</button>
+    </div>
+
+    <div class="globalChat">
+        <div class="ulHolder">
+            <ul>
+            </ul>
+        </div>
+        <input type="text" name="global">
+        <h3>Global chat</h3>
+        <div class="shader"></div>
+    </div>
+
+    <div class="localChat">
+        <div class="ulHolder">
+            <ul>
+            </ul>
+        </div>
+        <input type="text" name="local">
+        <h3>Local chat</h3>
+        <div class="shader"></div>
+    </div>
+
+    <div class="instructions">
+        <h2>Connecting...</h2>
+        <p>
+            WASD or cursor keys to move.
+        </p>
+        <p>
+            "Walking" is currently a proof of concept, "platforms", gravity and jumping coming soon.
+        </p>
+        <p>
+            There is a <em>very</em> ropey multi-player element now, which probably won't work. Expect ghosts
+            and stuck other players.
+        </p>
+        <p>
+            <a href="http://revdancatt.com/2013/11/26/slowly-bringing-glitch-back-to-life/">Blogpost/About</a><br>
+            <a href="http://blog.mvurxi.com">Dev Blog for updates</a><br>
+            <a href="https://github.com/ap0ught/CAT422-glitch-location-viewer">Source code on GitHub</a><br>
+            <a href="https://twitter.com/revdancatt">Twitter @revdancatt</a>
+        </p>
+        <p>
+            * * *
+        </p>
+        <p>
+            Things <strong>WILL</strong> break, hitting reload will sometimes help.
+        </p>
+        <p>
+            Chrome YES, Firefox MAYBE,<br>
+            Safari SLOW. IE??? Pfff.
+        </p>
+        <p><a class="layerControlsToggle" href="#layerControls" aria-controls="layerControls" aria-expanded="false">Enable/disable layers</a></p>
         <ul id="layerControls" aria-label="Layer visibility" hidden></ul>
-    </nav>
+    </div>
 
     <script src="js/jquery-2.0.3.min.js"></script>
     <script src="js/room-layers.js?v=0.9.6"></script>
-    <script src="js/control.js?v=0.9.9"></script>
+    <script src="js/control.js?v=0.9.10"></script>
     <script src="js/player.js?v=0.9.6"></script>
     <script>
         // The multiplayer chat server (mvurxi.com:8025) is retired.
@@ -80,13 +120,6 @@
                 var list = document.getElementById('layerControls');
                 list.hidden = !list.hidden;
                 this.setAttribute('aria-expanded', String(!list.hidden));
-            });
-            $('.worldMap a[href^="#/"]').bind('click', function(event) {
-                event.preventDefault();
-                var roomId = this.hash.slice(2);
-                control.pendingArrival = null;
-                window.location.hash = '#/' + roomId;
-                control.loadRoom(roomId);
             });
         });
     </script>

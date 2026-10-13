@@ -226,33 +226,23 @@ html, body {
     padding: 6px;
 }
 
-.worldMap {
+.instructions {
     position: fixed;
     top: 4px;
     right: 4px;
     width: 296px;
     height: 645px;
-    overflow-y: auto;
     border: 1px solid #DDD;
     border-radius: 6px;
     padding: 6px;
+    overflow-y: auto;
     text-align: center;
     background: rgba(255, 255, 255, 0.75);
 }
 
-.worldMap h2 {
-    margin-top: 16px;
-    margin-bottom: 16px;
-}
-
-.worldMap ul {
-    list-style: none;
-    padding: 0;
-    text-align: left;
-}
-
-.worldMap li {
-    margin: 16px 0;
+.instructions h2 {
+    margin-top: 64px;
+    margin-bottom: 64px;
 }
 
 .globalChat,
