@@ -88,6 +88,7 @@ function viewer(search = '?render=1') {
                 text(value) { this.content = value; return this; },
                 empty() { this.emptied = true; return this; },
                 fadeOut() { return this; },
+                fadeIn() { return this; },
                 hide() { this.hidden = true; return this; },
                 stop() { return this; },
                 fadeTo() { return this; },
@@ -110,7 +111,7 @@ function viewer(search = '?render=1') {
     const context = vm.createContext({
         $, room: structuredClone(room), roomLayers, window: {},
         document: {getElementById() { return null; }},
-        location: {search}, console: {log() {}},
+        location: {search}, URLSearchParams, console: {log() {}},
         player: {otherUsers: {}, loaded: true}
     });
     vm.runInContext(fs.readFileSync('js/control.js', 'utf8'), context);
@@ -143,6 +144,55 @@ test('render readiness publishes layers and omissions, with platforms only when 
         assert.equal('__RENDER_PLATFORMS__' in window, search.includes('platforms=1'));
         if (window.__RENDER_PLATFORMS__) assert.equal(window.__RENDER_PLATFORMS__.lines.length, 66);
     }
+});
+
+test('displayLayers selects exact IDs before processing and defaults to all', () => {
+    for (const [search, expected] of [
+        ['', Object.keys(room.dynamic.layers)],
+        ['?displayLayers=middleground', ['middleground']],
+        ['?displayLayers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground']],
+        ['?displayLayers=', []],
+        ['?displayLayers=unknown', []],
+        ['?displayLayers=%20middleground%20', ['middleground']]
+    ]) {
+        const {context} = viewer(search);
+        context.control.configureLayers(context.room);
+        assert.deepEqual(Object.keys(context.control.gameObject.dynamic.layers).sort(), expected.sort());
+        assert.equal(Object.keys(context.room.dynamic.layers).length, 8, 'source layer tree is not modified');
+    }
+});
+
+test('excluded decorations are not inspected or reported as unpainted', () => {
+    const {context, requests} = viewer('?displayLayers=middleground');
+    Object.defineProperty(context.room.dynamic.layers.T_1314039143686, 'decos', {
+        get() { throw new Error('excluded decorations must not be processed'); }
+    });
+    context.control.configureLayers(context.room);
+    context.room = context.control.gameObject;
+    context.control.layerQueue = ['middleground'];
+    context.control.noteUnpaintedLayers();
+    context.control.finishLevel();
+    assert.deepEqual(Array.from(context.window.__RENDER_LAYERS__.layers, l => l.id), ['middleground']);
+    assert.equal(context.window.__RENDER_SKIPPED__.length, 0);
+    assert.equal(requests.length, 0);
+});
+
+test('getLayers returns all metadata without invoking the canvas or image pipeline', () => {
+    const {context, requests} = viewer('?getLayers=1&displayLayers=middleground&platforms=1');
+    context.control.configureLayers(context.room);
+    context.control.prepLayers = () => assert.fail('metadata-only must not prepare canvases');
+    context.control.loadImages = () => assert.fail('metadata-only must not load scenery');
+    context.control.loadImage = () => assert.fail('metadata-only must not paint scenery');
+    context.$('.stage').width = () => 6000;
+    context.window.scrollTo = () => {};
+    context.control.prepStage();
+    assert.equal(context.control.metadataOnly, true);
+    assert.equal(context.window.__RENDER_READY__, true);
+    assert.equal(context.window.__RENDER_LAYERS__.layers.length, 8);
+    assert.equal(context.window.__RENDER_PLATFORMS__.lines.length, 66);
+    assert.equal(context.control.currentImageCount, 0);
+    assert.equal(context.control.layersId.length, 0);
+    assert.equal(requests.length, 0);
 });
 
 test('missing PNG, Flash and unpainted pieces do not stop the image queue', () => {

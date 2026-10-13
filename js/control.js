@@ -6,6 +6,7 @@ control = {
     currentImageCount: 0,
     failedImageLoad: {},
     skippedAssets: [],
+    metadataOnly: false,
 
     layersId: [],
     layersIdLength: 0,
@@ -105,6 +106,24 @@ control = {
     },
 
 
+    configureLayers: function(data) {
+        var params = new URLSearchParams(location.search);
+        this.metadataOnly = params.get('getLayers') === '1';
+        this.gameObject = data;
+        if (!this.metadataOnly && params.has('displayLayers')) {
+            var ids = params.get('displayLayers').split(',').map(function(id) { return id.trim(); });
+            var layers = Object.create(null);
+            Object.keys(data.dynamic.layers).forEach(function(id) {
+                if (ids.indexOf(id) !== -1) {
+                    layers[id] = data.dynamic.layers[id];
+                }
+            });
+            this.gameObject = Object.assign({}, data, {
+                dynamic: Object.assign({}, data.dynamic, {layers: layers})
+            });
+        }
+    },
+
     //  Create the stage and put the gradient background in.
     prepStage: function() {
 
@@ -132,6 +151,17 @@ control = {
         });
         control.stageWidth = parseInt(room.dynamic.r, 10) - parseInt(room.dynamic.l, 10);
         control.stageHeight = parseInt(room.dynamic.b, 10) - parseInt(room.dynamic.t, 10);
+
+        if (this.metadataOnly) {
+            this.layerQueue = [];
+            this.layersId = [];
+            this.maxImageCount = this.currentImageCount = 0;
+            this.failedImageLoad = {};
+            this.skippedAssets = [];
+            this.loadingRoom = false;
+            this.finishLevel();
+            return;
+        }
 
         //  Pad the gratients (yes we could use loopy things but you know
         //  obvious code is obvious)
@@ -808,6 +838,7 @@ control = {
             window.__RENDER_H = Math.round(control.stageHeight * rk);
             window.__RENDER_READY__ = true;
         }
+        if (this.metadataOnly) window.__RENDER_READY__ = true;
 
     },
 
@@ -899,7 +930,7 @@ control = {
 //  github.
 function getRoom(dataJSON) {
     //  Store the data
-    control.gameObject = dataJSON;
+    control.configureLayers(dataJSON);
 
     //  prep the stage
     control.prepStage();

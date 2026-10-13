@@ -32,6 +32,25 @@ to their width: `Math.floor(percent * (viewport - layerSpan))`, with percent 0
 at the near edge and 1 at the far edge. Runtime motion uses the existing canvas
 viewer; three.js and additional art packs are not needed.
 
+### Layer URL arguments
+- `?getLayers=1#/ROOM` publishes the full layer manifest on
+  `window.__RENDER_LAYERS__` and sets `window.__RENDER_READY__` without creating
+  canvases, processing decorations, or requesting scenery. This is a browser
+  metadata response, not a JSON HTTP endpoint. The room data still loads.
+- `?render=1&displayLayers=middleground#/ROOM` renders only middleground.
+  Pass multiple exact layer IDs separated by commas, for example
+  `displayLayers=middleground,T_1314039143686`. Only selected layers enter the
+  canvas/scenery pipeline and appear in the returned manifest; excluded layers
+  are not loaded or processed and are not reported as dropped.
+- Without `displayLayers`, all layers render as before. An empty value or
+  unknown IDs select no layers (no fallback to all). Duplicates are ignored.
+  `getLayers=1` takes precedence over `displayLayers`, returning the full list.
+  `platforms=1` remains optional and uses the returned layers.
+
+For example, first open `?getLayers=1#/GIFPD818SEI26JR` to discover layer IDs,
+then open `?render=1&displayLayers=middleground#/GIFPD818SEI26JR` to capture just
+that canvas. URL selection also applies when navigating to another room.
+
 In the right sidebar, **Enable/disable layers** opens visibility links for each
 painted layer in the current room. Disabling a layer hides only its scenery
 canvas, not the player or its parallax transform. The list refreshes on room
