@@ -32,6 +32,12 @@ to their width: `Math.floor(percent * (viewport - layerSpan))`, with percent 0
 at the near edge and 1 at the far edge. Runtime motion uses the existing canvas
 viewer; three.js and additional art packs are not needed.
 
+In the right sidebar, **Enable/disable layers** opens visibility links for each
+painted layer in the current room. Disabling a layer hides only its scenery
+canvas, not the player or its parallax transform. The list refreshes on room
+changes; newly loaded canvases start visible. These controls are hidden in
+render mode and do not change raw canvas pixels or the capture manifest.
+
 Scenery is requested only as `img/scenery/<name>.png`. Flash/SWF is not served;
 JPEG/GIF filename extensions resolve to the PNG counterpart, not those formats.
 Missing PNGs, Flash pieces, and pieces on unpainted layers do not fail the room.

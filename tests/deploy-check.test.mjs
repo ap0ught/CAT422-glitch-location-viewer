@@ -77,6 +77,8 @@ test('the sidebar links to all eight Metroid world streets instead of retired ch
     const paragraphs = [...sidebar[1].matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m => m[1]);
     assert.equal(paragraphs.length, 1, 'only the world-map reference should remain outside the street list');
     assert.match(paragraphs[0], /^<a href="https:\/\/github.com\/ap0ught\/puzzle-workshop\/issues\/14">World map and progression<\/a>$/);
+    assert.match(sidebar[1], /class="layerControlsToggle"[^>]*aria-expanded="false">Enable\/disable layers<\/a>/);
+    assert.match(sidebar[1], /<ul id="layerControls"[^>]*hidden><\/ul>/);
     const roomIds = [...sidebar[1].matchAll(/href="#\/([A-Z0-9]+)"/g)].map(m => m[1]);
     assert.deepEqual(roomIds, [
         'GIFPD818SEI26JR', 'GIF44E96U4I2OQK', 'GA9QR2STO832N8E', 'GDOC74759ST2IG1',

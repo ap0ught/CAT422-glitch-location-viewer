@@ -86,7 +86,7 @@ function viewer(search = '?render=1') {
                 handlers: {},
                 css() { return this; },
                 text(value) { this.content = value; return this; },
-                empty() { return this; },
+                empty() { this.emptied = true; return this; },
                 fadeOut() { return this; },
                 hide() { this.hidden = true; return this; },
                 stop() { return this; },
@@ -109,6 +109,7 @@ function viewer(search = '?render=1') {
     $.getScript = url => requests.push(url);
     const context = vm.createContext({
         $, room: structuredClone(room), roomLayers, window: {},
+        document: {getElementById() { return null; }},
         location: {search}, console: {log() {}},
         player: {otherUsers: {}, loaded: true}
     });
@@ -178,6 +179,54 @@ test('loading another room clears stale capture state and layer IDs', () => {
     }
     assert.equal(control.layersId.length, 0);
     assert.equal(requests.length, 1);
+    assert.equal(context.$('#layerControls').emptied, true);
+});
+
+test('layer links toggle only their canvas, support keyboard use, and refresh for a new room', () => {
+    const {context} = viewer('');
+    function node() {
+        return {
+            style: {}, attributes: {}, children: [], events: {},
+            set textContent(value) { this.text = value; this.children = []; },
+            get textContent() { return this.text; },
+            setAttribute(name, value) { this.attributes[name] = value; },
+            appendChild(child) { this.children.push(child); },
+            addEventListener(name, handler) { this.events[name] = handler; },
+            click() { this.events.click({preventDefault() {}}); }
+        };
+    }
+    const list = node();
+    const background = node();
+    const gameplay = node();
+    const nodes = new Map([
+        ['layerControls', list], ['background_canvas', background], ['middleground_canvas', gameplay]
+    ]);
+    context.document = {
+        getElementById(id) { return nodes.get(id); },
+        createElement() { return node(); }
+    };
+    const manifest = {layers: [
+        {canvasId: 'background_canvas', name: '<background>'},
+        {canvasId: 'middleground_canvas', name: 'middleground'},
+        {canvasId: 'unpainted_canvas', name: 'unpainted'}
+    ]};
+    context.control.updateLayerControls(manifest);
+    assert.equal(list.children.length, 2, 'unpainted layers have no visibility link');
+    const link = list.children[0].children[0];
+    assert.equal(link.textContent, 'Disable <background>');
+    assert.equal(link.attributes['aria-pressed'], 'true');
+    assert.equal(link.attributes['aria-controls'], 'background_canvas');
+    link.click();
+    assert.equal(background.style.visibility, 'hidden');
+    assert.equal(gameplay.style.visibility, undefined);
+    assert.equal(link.textContent, 'Enable <background>');
+    assert.equal(link.attributes['aria-pressed'], 'false');
+    link.events.keydown({key: ' ', preventDefault() {}});
+    assert.equal(background.style.visibility, 'visible');
+    assert.equal(link.attributes['aria-pressed'], 'true');
+    context.control.updateLayerControls({layers: [manifest.layers[1]]});
+    assert.equal(list.children.length, 1, 'old layer links are removed');
+    assert.equal(list.children[0].children[0].textContent, 'Disable middleground');
 });
 
 test('dropped scenery names are displayed as text, not interpreted as HTML', () => {

@@ -232,6 +232,7 @@ html, body {
     right: 4px;
     width: 296px;
     height: 645px;
+    overflow-y: auto;
     border: 1px solid #DDD;
     border-radius: 6px;
     padding: 6px;

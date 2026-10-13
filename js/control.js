@@ -76,6 +76,7 @@ control = {
         player.otherUsers = {};
         player.loaded = false;
         $('.exits').empty();
+        $('#layerControls').empty();
 
         //  Empty the layerQueue, and the imageQueue
         this.layerQueue = [];
@@ -715,6 +716,40 @@ control = {
         this.loadImages();
     },
 
+    updateLayerControls: function(manifest) {
+        var list = document.getElementById('layerControls');
+        if (!list) return;
+        list.textContent = '';
+        manifest.layers.forEach(function(layer) {
+            var canvas = document.getElementById(layer.canvasId);
+            if (!canvas) return;
+            var item = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = '#' + layer.canvasId;
+            link.setAttribute('role', 'button');
+            link.setAttribute('aria-controls', layer.canvasId);
+            function updateLabel() {
+                var visible = canvas.style.visibility !== 'hidden';
+                link.textContent = (visible ? 'Disable ' : 'Enable ') + layer.name;
+                link.setAttribute('aria-pressed', String(visible));
+            }
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                canvas.style.visibility = canvas.style.visibility === 'hidden' ? 'visible' : 'hidden';
+                updateLabel();
+            });
+            link.addEventListener('keydown', function(event) {
+                if (event.key === ' ') {
+                    event.preventDefault();
+                    link.click();
+                }
+            });
+            updateLabel();
+            item.appendChild(link);
+            list.appendChild(item);
+        });
+    },
+
     //  This wraps up all the lose ends
     finishLevel: function() {
 
@@ -752,6 +787,7 @@ control = {
         var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice());
         window.__RENDER_LAYERS__ = manifest;
         window.__RENDER_SKIPPED__ = manifest.dropped;
+        this.updateLayerControls(manifest);
 
         if (/[?&]render=1\b/.test(renderParams)) {
             control.renderMode = true;

@@ -2,7 +2,7 @@
 <head>
     <meta charset="utf-8" />
     <title>MVURXI</title>
-    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.7" />
+    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.8" />
 </head>
 <body>
 
@@ -48,11 +48,13 @@
             <li><a href="#/GM413SQ6LRN58">East Spice — Electrical Circuit</a></li>
             <li><a href="#/GM410QQ0CHARO">Flipside — Gear Machine</a></li>
         </ul>
+        <a class="layerControlsToggle" href="#layerControls" aria-controls="layerControls" aria-expanded="false">Enable/disable layers</a>
+        <ul id="layerControls" aria-label="Layer visibility" hidden></ul>
     </nav>
 
     <script src="js/jquery-2.0.3.min.js"></script>
     <script src="js/room-layers.js?v=0.9.6"></script>
-    <script src="js/control.js?v=0.9.7"></script>
+    <script src="js/control.js?v=0.9.8"></script>
     <script src="js/player.js?v=0.9.6"></script>
     <script>
         // The multiplayer chat server (mvurxi.com:8025) is retired.
@@ -73,6 +75,12 @@
                 //  Nowt!
             }
             control.init(startRoom);
+            $('.layerControlsToggle').bind('click', function(event) {
+                event.preventDefault();
+                var list = document.getElementById('layerControls');
+                list.hidden = !list.hidden;
+                this.setAttribute('aria-expanded', String(!list.hidden));
+            });
             $('.worldMap a[href^="#/"]').bind('click', function(event) {
                 event.preventDefault();
                 var roomId = this.hash.slice(2);
