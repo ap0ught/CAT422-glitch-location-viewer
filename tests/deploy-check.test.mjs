@@ -70,9 +70,13 @@ test('the default room (no URL hash) exists', () => {
 
 test('the sidebar links to all eight Metroid world streets instead of retired chats', () => {
     const html = fs.readFileSync('index.html', 'utf8');
+    assert.match(html, /<meta charset="utf-8"\s*\/?>/);
     const sidebar = html.match(/<nav class="worldMap"[^>]*>([\s\S]*?)<\/nav>/);
     assert.ok(sidebar, 'world map sidebar missing');
     assert.match(sidebar[1], /href="https:\/\/github.com\/ap0ught\/puzzle-workshop\/issues\/14"/);
+    const paragraphs = [...sidebar[1].matchAll(/<p>([\s\S]*?)<\/p>/g)].map(m => m[1]);
+    assert.equal(paragraphs.length, 1, 'only the world-map reference should remain outside the street list');
+    assert.match(paragraphs[0], /^<a href="https:\/\/github.com\/ap0ught\/puzzle-workshop\/issues\/14">World map and progression<\/a>$/);
     const roomIds = [...sidebar[1].matchAll(/href="#\/([A-Z0-9]+)"/g)].map(m => m[1]);
     assert.deepEqual(roomIds, [
         'GIFPD818SEI26JR', 'GIF44E96U4I2OQK', 'GA9QR2STO832N8E', 'GDOC74759ST2IG1',
