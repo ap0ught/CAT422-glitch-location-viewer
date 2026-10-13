@@ -4,8 +4,9 @@
     "description": "Client to render Glitch locations in javaascript",
     "author": "Rev Dan Catt",
     "dependencies": {
-        "xml2js": "~0.2.8",
-        "async": "~0.2.9"
+        "@vercel/analytics": "^2.0.1",
+        "async": "~0.2.9",
+        "xml2js": "~0.2.8"
     },
     "engines": {
         "node": ">=18.0.0"
