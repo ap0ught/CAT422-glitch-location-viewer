@@ -80,6 +80,7 @@ test('platform locations match the existing Baram Sum export', () => {
 function viewer(search = '?render=1') {
     const elements = new Map();
     const requests = [];
+    const scripts = [];
     function $(selector) {
         if (!elements.has(selector)) {
             const element = {
@@ -110,7 +111,12 @@ function viewer(search = '?render=1') {
     $.getScript = url => requests.push(url);
     const context = vm.createContext({
         $, room: structuredClone(room), roomLayers, window: {},
-        document: {getElementById() { return null; }},
+        document: {
+            currentScript: null,
+            createElement(tagName) { return {tagName}; },
+            head: {appendChild(script) { scripts.push(script); requests.push(script.src); }},
+            getElementById() { return null; }
+        },
         location: {search}, URLSearchParams, console: {log() {}},
         player: {otherUsers: {}, loaded: true}
     });
@@ -119,7 +125,7 @@ function viewer(search = '?render=1') {
         currentRoomId: roomId, stageWidth: 6000, stageHeight: 1000,
         loadingRoom: false, loadtime: {start: new Date()}
     });
-    return {context, elements, requests};
+    return {context, elements, requests, scripts};
 }
 
 test('render readiness publishes layers and omissions, with platforms only when requested', () => {
@@ -230,6 +236,43 @@ test('loading another room clears stale capture state and layer IDs', () => {
     assert.equal(control.layersId.length, 0);
     assert.equal(requests.length, 1);
     assert.equal(context.$('#layerControls').emptied, true);
+});
+
+test('stale room and image callbacks are ignored', () => {
+    const {context, scripts} = viewer('');
+    const {control, document} = context;
+    control.loadRoom('GOLDROOM');
+    const staleScript = scripts[0];
+    control.loadRoom('GNEWROOM');
+    const currentRoom = {sentinel: true};
+    control.gameObject = currentRoom;
+    control.prepStage = () => assert.fail('stale room data must not be prepared');
+    document.currentScript = staleScript;
+    context.getRoom(room);
+    assert.equal(control.gameObject, currentRoom);
+
+    const handlers = {};
+    context.$ = selector => {
+        if (selector === '<img>') {
+            return {
+                css() { return this; },
+                bind(event, handler) { handlers[event] = handler; return this; },
+                attr() { return this; }
+            };
+        }
+        return {append() { return this; }};
+    };
+    let skipped = 0;
+    let advanced = 0;
+    control.loadingRoom = false;
+    control.noteSkipped = () => skipped++;
+    control.advanceImageQueue = () => advanced++;
+    control.loadImage('middleground', {filename: 'tree', w: 1, h: 1});
+    control.loadGeneration++;
+    handlers.error();
+    handlers.load();
+    assert.equal(skipped, 0);
+    assert.equal(advanced, 0);
 });
 
 test('layer links toggle only their canvas, support keyboard use, and refresh for a new room', () => {

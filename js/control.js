@@ -26,6 +26,7 @@ control = {
 
     loadingRoom: true,
     loadingItem: null,
+    loadGeneration: 0,
     loadtime: {
         start: null,
         end: null
@@ -59,6 +60,7 @@ control = {
     */
     loadRoom: function(roomId) {
         roomId = String(roomId).replace(/^L/, 'G');
+        var loadGeneration = ++this.loadGeneration;
 
 
         control.loadtime.start = new Date();
@@ -101,7 +103,10 @@ control = {
         //  ...without needing to worry about cross-domain stuff.
         //  Note that we're loading the room
         this.loadingRoom = true;
-        $.getScript('locations/' + roomId + '.callback.json');
+        var script = document.createElement('script');
+        script.src = 'locations/' + roomId + '.callback.json';
+        script.loadGeneration = loadGeneration;
+        document.head.appendChild(script);
 
     },
 
@@ -587,6 +592,7 @@ control = {
 
         //  If we are loading a new room, then don't do any of this
         if (this.loadingRoom) return;
+        var loadGeneration = this.loadGeneration;
         
         //  Prep the image
         var newImg = $('<img>');
@@ -602,6 +608,7 @@ control = {
         //  then we make a note of which image failed and move
         //  onto the next one
         newImg.bind('error', function() {
+            if (loadGeneration !== control.loadGeneration) return;
             control.noteSkipped(layerId, item.filename, 'missing-png');
             control.advanceImageQueue();
         });
@@ -609,6 +616,7 @@ control = {
         //  If the image loaded then we need to move make a blitting canvas for it
         //  and move it over.
         newImg.bind('load', function() {
+            if (loadGeneration !== control.loadGeneration) return;
 
 
             var thisImg = this;
@@ -929,6 +937,11 @@ control = {
 //  This is an example of how you would handle loading in the files from 
 //  github.
 function getRoom(dataJSON) {
+    var script = document.currentScript;
+    if (!script) return;
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (script.loadGeneration !== control.loadGeneration) return;
+
     //  Store the data
     control.configureLayers(dataJSON);
 
