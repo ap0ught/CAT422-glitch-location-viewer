@@ -52,6 +52,20 @@ test('dropped pieces are part of the layer response', () => {
     assert.deepEqual(manifest.layers.find(layer => layer.id === 'bg'), undefined);
 });
 
+test('repeated missing scenery collapses to one on-page line', () => {
+    const piece = roomLayers.droppedPiece('sky', 'k02_sky_2000x500', 'missing-png');
+    const many = Array.from({length: 454}, () => ({...piece, layerId: 'sky'}));
+    many.push(roomLayers.droppedPiece('middleground', 'sign.swf', 'flash'));
+    const summary = roomLayers.summarizeDropped(many);
+    assert.equal(summary.length, 2);
+    assert.equal(summary[0].filename, 'k02_sky_2000x500');
+    assert.equal(summary[0].count, 454);
+    assert.equal(summary[0].url, 'img/scenery/k02_sky_2000x500.png');
+    assert.equal(summary[1].count, 1);
+    assert.equal(summary[1].url, null);
+    assert.equal(many.length, 455);
+});
+
 test('middleground art is placed from the room origin', () => {
     assert.deepEqual(roomLayers.worldOrigin(room.dynamic), {x: 3000, y: 1000});
     assert.deepEqual(roomLayers.worldOrigin({l: -500, t: -700, r: 500, b: 0}), {x: 500, y: 700});

@@ -37,7 +37,9 @@ be painted is still returned to the requester. The list is
 `window.__RENDER_SKIPPED__` is that same list. Each entry has `layerId`,
 `filename`, `reason` (`missing-png`, `flash`, or `unpainted-layer`), and `url`
 (the PNG that was requested, or null when no PNG is served). The room is still
-served. The on-page missing-image list shows the same entries.
+served. The on-page missing-image list groups those entries by filename, so a
+file used many times is one line with a count. The panel scrolls if the unique
+list is still long.
 
 ## Signposts and doors
 The viewer already converts signpost connections and shows them in the Exits

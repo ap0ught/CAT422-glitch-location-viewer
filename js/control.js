@@ -723,11 +723,14 @@ control = {
     //  This wraps up all the lose ends
     finishLevel: function() {
 
-        //  Display everything left out, including why, so the page is not silent.
+        //  The manifest keeps every piece. The on-page list groups repeats
+        //  so one missing file used hundreds of times stays one line.
+        var summary = roomLayers.summarizeDropped(this.skippedAssets);
         var newHtml = '';
-        for (var s = 0; s < this.skippedAssets.length; s++) {
-            var drop = this.skippedAssets[s];
+        for (var s = 0; s < summary.length; s++) {
+            var drop = summary[s];
             newHtml += drop.filename + ' (' + drop.reason + ')';
+            if (drop.count > 1) newHtml += ' ×' + drop.count;
             if (drop.url) newHtml += ' ' + drop.url;
             newHtml += '<br />';
         }

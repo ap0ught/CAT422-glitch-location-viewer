@@ -64,6 +64,8 @@ html, body {
     right: 8px;
     bottom: 8px;
     max-width: 280px;
+    max-height: 160px;
+    overflow: auto;
     background: black;
     font-family: monospace;
     font-size: 12px;

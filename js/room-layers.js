@@ -53,6 +53,34 @@
         };
     }
 
+    // The manifest keeps one entry per decoration. The on-page report groups
+    // repeats so a street that reuses one missing file does not paint hundreds
+    // of identical lines.
+    function summarizeDropped(dropped) {
+        var groups = [];
+        var index = {};
+        var list = dropped || [];
+        for (var i = 0; i < list.length; i++) {
+            var drop = list[i] || {};
+            var filename = drop.filename || '';
+            var reason = drop.reason || '';
+            var url = drop.url || '';
+            var key = filename + '\n' + reason + '\n' + url;
+            if (Object.prototype.hasOwnProperty.call(index, key)) {
+                groups[index[key]].count++;
+            } else {
+                index[key] = groups.length;
+                groups.push({
+                    filename: filename,
+                    reason: reason,
+                    url: drop.url || null,
+                    count: 1
+                });
+            }
+        }
+        return groups;
+    }
+
     function cameraPercent(focus, roomSpan, viewport) {
         focus = Number(focus);
         roomSpan = Number(roomSpan);
@@ -161,6 +189,7 @@
         sceneryUrl: sceneryUrl,
         worldOrigin: worldOrigin,
         droppedPiece: droppedPiece,
+        summarizeDropped: summarizeDropped,
         cameraPercent: cameraPercent,
         layerTranslate: layerTranslate,
         layerManifest: layerManifest,
