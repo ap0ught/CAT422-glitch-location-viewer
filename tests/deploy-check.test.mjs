@@ -53,6 +53,7 @@ test('index.html only references local assets that exist', () => {
     const refs = [...html.matchAll(/(?:src|href)="([^"]+)"/g)]
         .map(m => m[1])
         .filter(u => !/^[a-z][a-z0-9+.-]*:/i.test(u)) // drop http:, https:, mailto: etc.
+        .filter(u => !u.startsWith('/_vercel/')) // allow Vercel-provided assets like Speed Insights
         .map(u => u.split('?')[0].split('#')[0])
         .filter(u => u.length > 0);
     const missing = refs.filter(u => !fs.existsSync(u));
