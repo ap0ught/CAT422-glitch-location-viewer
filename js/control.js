@@ -30,7 +30,19 @@ control = {
         end: null
     },
 
+    isRenderCapture: function() {
+        return /[?&]render=1\b/.test(location.search);
+    },
+
     init: function(roomId) {
+
+        //  Capture mode is decided by the URL, before any room paint, so the
+        //  loading panel and sidebar never get a frame.
+        if (this.isRenderCapture()) {
+            this.renderMode = true;
+            this.renderScale = 1;
+            document.documentElement.classList.add('render-capture');
+        }
 
         //  update the percentageOf if we resize the window
         $(window).bind('resize', function() {
@@ -66,9 +78,9 @@ control = {
         this.currentRoomId = roomId;
 
         //  Now fade down the stage (we will empty it
-        //  when we have the new room loaded)
+        //  when we have the new room loaded). Capture mode stays put.
         $('.stage').stop(true, false);
-        $('.stage').fadeTo(1333, 0.1);
+        if (!this.renderMode) $('.stage').fadeTo(1333, 0.1);
         $('.location').text('');
         $('.player_holder').remove();
         $('.other_player_holders').remove();
@@ -112,20 +124,37 @@ control = {
         $('.stage').stop(true, false);
         $('.stage').empty();
         window.scrollTo(0,0);
-        $('.stage').fadeTo(666, 1);
-        $('.loading_holder').fadeIn(666);
+        if (this.renderMode) {
+            $('.stage').css('opacity', 1);
+            $('.loading_holder').hide();
+        } else {
+            $('.stage').fadeTo(666, 1);
+            $('.loading_holder').fadeIn(666);
+        }
 
         //  First thing we want to do is set the stage, so lets get the stage size and
         //  gradient.
-        $('.stage').css({
-            position: 'absolute',
-            overflow: 'hidden',
-            width: parseInt(room.dynamic.r, 10) - parseInt(room.dynamic.l, 10),
-            height: parseInt(room.dynamic.b, 10) - parseInt(room.dynamic.t, 10),
-            'z-index': -1000
-        });
         control.stageWidth = parseInt(room.dynamic.r, 10) - parseInt(room.dynamic.l, 10);
         control.stageHeight = parseInt(room.dynamic.b, 10) - parseInt(room.dynamic.t, 10);
+        var stageCss = {
+            position: 'absolute',
+            overflow: 'hidden',
+            width: control.stageWidth,
+            height: control.stageHeight,
+            'z-index': -1000
+        };
+        if (this.renderMode) {
+            var earlyWidth = location.search.match(/[?&]w=(\d+)/);
+            var earlyTarget = earlyWidth ? parseInt(earlyWidth[1], 10) : control.stageWidth;
+            this.renderScale = Math.min(1, earlyTarget / control.stageWidth);
+            stageCss.position = 'fixed';
+            stageCss.left = 0;
+            stageCss.top = 0;
+            stageCss['z-index'] = 1;
+            stageCss['transform-origin'] = 'top left';
+            stageCss.transform = 'scale(' + this.renderScale + ')';
+        }
+        $('.stage').css(stageCss);
 
         //  Pad the gratients (yes we could use loopy things but you know
         //  obvious code is obvious)
@@ -748,7 +777,8 @@ control = {
             $('.debug').empty();
         }
 
-        $('.loading_holder').fadeOut(600);
+        if (this.renderMode) $('.loading_holder').hide();
+        else $('.loading_holder').fadeOut(600);
 
         control.loadtime.end = new Date();
         console.log('Load time: ' + (control.loadtime.end - control.loadtime.start) + 'ms');
