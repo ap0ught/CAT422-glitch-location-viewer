@@ -22,13 +22,22 @@ file: add `platforms=1` to the page URL. It is omitted unless that flag is set.
 The value is `window.__RENDER_PLATFORMS__`.
 
 ## Served layers
-`?render=1#/ROOM` still frames the room for a full-stage capture. It also
+`?render=1#/ROOM` still frames the room for a full-stage capture. The loading
+panel and sidebar are hidden before the first paint. It also
 publishes each source layer on `window.__RENDER_LAYERS__` (back to front) once
 `window.__RENDER_READY__` is true. Paint for a layer is the canvas
 `#<id>_canvas`, for example `#middleground_canvas`. Scroll a layer with the
 manifest's formula, `Math.floor(percent * (viewport - layerSpan))`, where
 percent is 0 at the near edge of the room and 1 at the far edge. The
 middleground layer is the gameplay layer (`gameplay: true`).
+
+Add `layers=middleground` or `layers=middleground,sky` to paint only those
+layers. Any other layer is left out of the image queue: its scenery is not
+requested and it gets no canvas. The manifest still lists it, with
+`painted: false`, `canvasId: null`, and `omitReason: "not-requested"`. Its
+decorations are not copied into `dropped`. An id in `layers` that the room
+does not have is listed on `notFound`. Omit `layers` to paint every layer
+that has a size.
 
 Scenery is requested only as `img/scenery/<filename>.png`. Flash/SWF files are
 not requested. A missing PNG, a Flash file, or a piece on a layer that cannot

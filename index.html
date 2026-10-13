@@ -1,7 +1,10 @@
 <html>
 <head>
     <title>MVURXI</title>
-    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.7" />
+    <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.9" />
+    <script>
+        if (/[?&]render=1\b/.test(location.search)) document.documentElement.classList.add('render-capture');
+    </script>
 </head>
 <body>
 
@@ -90,9 +93,9 @@
     </div>
 
     <script src="js/jquery-2.0.3.min.js"></script>
-    <script src="js/room-layers.js?v=0.9.7"></script>
-    <script src="js/control.js?v=0.9.7"></script>
-    <script src="js/player.js?v=0.9.7"></script>
+    <script src="js/room-layers.js?v=0.9.9"></script>
+    <script src="js/control.js?v=0.9.9"></script>
+    <script src="js/player.js?v=0.9.9"></script>
     <script>
         // The multiplayer chat server (mvurxi.com:8025) is retired.
         // Provide a no-op socket so the viewer works standalone; to
