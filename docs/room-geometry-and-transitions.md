@@ -22,7 +22,8 @@ file: add `platforms=1` to the page URL. It is omitted unless that flag is set.
 The value is `window.__RENDER_PLATFORMS__`.
 
 ## Served layers
-`?render=1#/ROOM` still frames the room for a full-stage capture. It also
+`?render=1#/ROOM` still frames the room for a full-stage capture. The loading
+panel and sidebar are hidden before the first paint. It also
 publishes each source layer on `window.__RENDER_LAYERS__` (back to front) once
 `window.__RENDER_READY__` is true. Paint for a layer is the canvas
 `#<id>_canvas`, for example `#middleground_canvas`. Scroll a layer with the
