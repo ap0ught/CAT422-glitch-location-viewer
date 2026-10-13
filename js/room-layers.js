@@ -103,30 +103,71 @@
         return shift === 0 ? 0 : shift;
     }
 
-    function layerManifest(room, roomId, dropped) {
+    // null means every layer. An object means only those ids are painted.
+    // `?layers=middleground` or `?layers=middleground,sky`.
+    function requestedLayerIds(search) {
+        if (typeof search !== 'string') return null;
+        var match = /(?:^|[?&])layers=([^&]*)/.exec(search);
+        if (!match) return null;
+        var ids = {};
+        var raw = match[1];
+        try {
+            raw = decodeURIComponent(raw.replace(/\+/g, ' '));
+        } catch (e) {
+            raw = match[1];
+        }
+        var parts = raw.split(',');
+        for (var i = 0; i < parts.length; i++) {
+            var id = parts[i].replace(/^\s+|\s+$/g, '');
+            if (id) ids[id] = true;
+        }
+        return ids;
+    }
+
+    function layerIsRequested(requested, id) {
+        return requested == null || requested[id] === true;
+    }
+
+    function layerManifest(room, roomId, dropped, requested) {
         var dynamic = (room && room.dynamic) || {};
         var source = dynamic.layers || {};
         var drops = dropped || [];
         var layers = [];
+        var notFound = [];
+        if (requested) {
+            for (var asked in requested) {
+                if (Object.prototype.hasOwnProperty.call(requested, asked) && !Object.prototype.hasOwnProperty.call(source, asked)) {
+                    notFound.push(asked);
+                }
+            }
+        }
         for (var id in source) {
             if (!Object.prototype.hasOwnProperty.call(source, id)) continue;
             var layer = source[id] || {};
             var z = asNumber(layer.z);
+            var w = asNumber(layer.w);
+            var h = asNumber(layer.h);
+            var askedFor = layerIsRequested(requested, id);
+            var sized = w !== null && h !== null;
+            var painted = askedFor && sized;
             var layerDrops = [];
             for (var i = 0; i < drops.length; i++) {
                 if (drops[i] && drops[i].layerId === id) layerDrops.push(drops[i]);
             }
-            layers.push({
+            var entry = {
                 id: id,
                 name: layer.name || id,
                 z: z === null ? 0 : z,
-                w: asNumber(layer.w),
-                h: asNumber(layer.h),
+                w: w,
+                h: h,
                 gameplay: id === 'middleground',
-                canvasId: id + '_canvas',
+                painted: painted,
+                canvasId: painted ? id + '_canvas' : null,
                 decoCount: (layer.decos && layer.decos.length) || layer.decoCount || 0,
                 dropped: layerDrops
-            });
+            };
+            if (!painted) entry.omitReason = askedFor ? 'unpainted-layer' : 'not-requested';
+            layers.push(entry);
         }
         layers.sort(function (a, b) {
             if (a.z !== b.z) return a.z - b.z;
@@ -144,7 +185,8 @@
                 translate: 'Math.floor(percent * (viewport - layerSpan))'
             },
             layers: layers,
-            dropped: drops
+            dropped: drops,
+            notFound: notFound
         };
     }
 
@@ -192,6 +234,8 @@
         summarizeDropped: summarizeDropped,
         cameraPercent: cameraPercent,
         layerTranslate: layerTranslate,
+        requestedLayerIds: requestedLayerIds,
+        layerIsRequested: layerIsRequested,
         layerManifest: layerManifest,
         platformLocations: platformLocations
     };

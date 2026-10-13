@@ -203,11 +203,15 @@ control = {
 
         //  loop thru the z-indexes, from back to front
         this.layerQueue = [];
+        this.layersId = [];
+        //  `layers=` names the canvases to paint. Everything else stays in
+        //  the manifest and is never queued, so its images are not fetched.
+        this.requestedLayers = roomLayers.requestedLayerIds(location.search);
         for (var z = lowestZIndex; z <= highestZIndex; z++) {
             //  loop thru the layers to find the layer that
             //  matches the z-index we are looking for
             $.each(room.dynamic.layers, function (id, layer) {
-                if (layer.z == z && isFinite(parseInt(layer.w, 10)) && isFinite(parseInt(layer.h, 10))) {
+                if (layer.z == z && isFinite(parseInt(layer.w, 10)) && isFinite(parseInt(layer.h, 10)) && roomLayers.layerIsRequested(control.requestedLayers, id)) {
                     control.layerQueue.push(id);
                     control.layersId.push(id);
                 }
@@ -702,6 +706,9 @@ control = {
         var layers = (room.dynamic && room.dynamic.layers) || {};
         for (var id in layers) {
             if (!Object.prototype.hasOwnProperty.call(layers, id) || queued[id]) continue;
+            //  A layer the URL did not ask for is not a failed paint. Leave
+            //  its decorations unread so they are not fetched or listed.
+            if (!roomLayers.layerIsRequested(this.requestedLayers, id)) continue;
             var decos = layers[id].decos || [];
             for (i = 0; i < decos.length; i++) {
                 this.noteSkipped(id, decos[i].filename, 'unpainted-layer');
@@ -760,7 +767,7 @@ control = {
 
         //  Publish layers before __RENDER_READY__. dropped is part of that
         //  response: pieces left out so the room could still render.
-        var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice());
+        var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice(), control.requestedLayers);
         window.__RENDER_LAYERS__ = manifest;
         window.__RENDER_SKIPPED__ = manifest.dropped;
 

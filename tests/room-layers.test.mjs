@@ -52,6 +52,29 @@ test('dropped pieces are part of the layer response', () => {
     assert.deepEqual(manifest.layers.find(layer => layer.id === 'bg'), undefined);
 });
 
+test('layers= paints only the named canvases', () => {
+    assert.equal(roomLayers.requestedLayerIds('?render=1'), null);
+    assert.deepEqual(roomLayers.requestedLayerIds('?render=1&layers=middleground'), {middleground: true});
+    assert.deepEqual(roomLayers.requestedLayerIds('?layers=middleground,sky'), {middleground: true, sky: true});
+    assert.deepEqual(roomLayers.requestedLayerIds('?layers=middleground%2Csky'), {middleground: true, sky: true});
+    const only = roomLayers.requestedLayerIds('?layers=middleground');
+    const manifest = roomLayers.layerManifest(room, roomId, [], only);
+    const painted = manifest.layers.filter(layer => layer.painted);
+    assert.deepEqual(painted.map(layer => layer.id), ['middleground']);
+    assert.equal(painted[0].canvasId, 'middleground_canvas');
+    assert.equal(painted[0].omitReason, undefined);
+    const skipped = manifest.layers.filter(layer => !layer.painted);
+    assert.ok(skipped.length > 0);
+    assert.ok(skipped.every(layer => layer.canvasId === null && layer.omitReason === 'not-requested' && layer.dropped.length === 0));
+    assert.deepEqual(manifest.dropped, []);
+    assert.deepEqual(manifest.notFound, []);
+    const missing = roomLayers.layerManifest(room, roomId, [], {middleground: true, nope: true});
+    assert.deepEqual(missing.notFound, ['nope']);
+    const all = roomLayers.layerManifest(room, roomId);
+    assert.equal(all.notFound.length, 0);
+    assert.ok(all.layers.every(layer => layer.painted === true && layer.canvasId === layer.id + '_canvas'));
+});
+
 test('repeated missing scenery collapses to one on-page line', () => {
     const piece = roomLayers.droppedPiece('sky', 'k02_sky_2000x500', 'missing-png');
     const many = Array.from({length: 454}, () => ({...piece, layerId: 'sky'}));
