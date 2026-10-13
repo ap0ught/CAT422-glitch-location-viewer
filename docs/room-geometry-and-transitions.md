@@ -17,6 +17,28 @@ Baram Sum room currently contains 66 platform segments. Coordinates are
 when connecting a physics engine; do not assume these are solid platforms
 without interpreting the original permission flags.
 
+The viewer can serve the same payload for any loaded room without writing a
+file: add `platforms=1` to the page URL. It is omitted unless that flag is set.
+The value is `window.__RENDER_PLATFORMS__`.
+
+## Served layers
+`?render=1#/ROOM` still frames the room for a full-stage capture. It also
+publishes each source layer on `window.__RENDER_LAYERS__` (back to front) once
+`window.__RENDER_READY__` is true. Paint for a layer is the canvas
+`#<id>_canvas`, for example `#middleground_canvas`. Scroll a layer with the
+manifest's formula, `Math.floor(percent * (viewport - layerSpan))`, where
+percent is 0 at the near edge of the room and 1 at the far edge. The
+middleground layer is the gameplay layer (`gameplay: true`).
+
+Scenery is requested only as `img/scenery/<filename>.png`. Flash/SWF files are
+not requested. A missing PNG, a Flash file, or a piece on a layer that cannot
+be painted is still returned to the requester. The list is
+`window.__RENDER_LAYERS__.dropped` (and each layer's own `dropped` array).
+`window.__RENDER_SKIPPED__` is that same list. Each entry has `layerId`,
+`filename`, `reason` (`missing-png`, `flash`, or `unpainted-layer`), and `url`
+(the PNG that was requested, or null when no PNG is served). The room is still
+served. The on-page missing-image list shows the same entries.
+
 ## Signposts and doors
 The viewer already converts signpost connections and shows them in the Exits
 list. The change in this branch routes clicks through a transition helper that

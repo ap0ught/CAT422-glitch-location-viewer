@@ -5,6 +5,7 @@ control = {
     maxImageCount: 0,
     currentImageCount: 0,
     failedImageLoad: {},
+    skippedAssets: [],
 
     layersId: [],
     layersIdLength: 0,
@@ -206,7 +207,7 @@ control = {
             //  loop thru the layers to find the layer that
             //  matches the z-index we are looking for
             $.each(room.dynamic.layers, function (id, layer) {
-                if (layer.z == z) {
+                if (layer.z == z && isFinite(parseInt(layer.w, 10)) && isFinite(parseInt(layer.h, 10))) {
                     control.layerQueue.push(id);
                     control.layersId.push(id);
                 }
@@ -228,20 +229,24 @@ control = {
             id = this.layerQueue[l];
             layer = room.dynamic.layers[id];
 
+            var layerW = parseInt(layer.w, 10);
+            var layerH = parseInt(layer.h, 10);
+
             newLayer = $('<div>');
             newLayer.attr('id', id);
+            newLayer.attr('data-layer', id);
             newLayer.css({
                 'position': 'absolute',
-                'width': parseInt(layer.w, 10),
-                'height': parseInt(layer.h, 10),
+                'width': layerW,
+                'height': layerH,
                 'left': 0,
-                'top': parseInt($('.stage').css('height'), 10) - parseInt(layer.h, 10),
+                'top': parseInt($('.stage').css('height'), 10) - layerH,
                 'z-index': parseInt(layer.z, 10)
             });
 
             //  Attach a canvas object to the layer
-            newCanvas = $('<canvas>').attr({id: id + '_canvas', width: parseInt(layer.w, 10), height: parseInt(layer.h, 10)})
-                .css({width: parseInt(layer.w, 10), height: parseInt(layer.h, 10)})
+            newCanvas = $('<canvas>').attr({id: id + '_canvas', width: layerW, height: layerH})
+                .css({width: layerW, height: layerH})
                 .css({position: 'absolute', top: 0, left: 0});
 
             //  Check for filters
@@ -452,7 +457,8 @@ control = {
             highestZIndex = -99999;
 
             //  Find out what the highest and lowest z-index is
-            decoLength = room.dynamic.layers[layerId].decos.length;
+            var decos = room.dynamic.layers[layerId].decos || [];
+            decoLength = decos.length;
             for (var d = 0; d < decoLength; d++ ) {
                 z = room.dynamic.layers[layerId].decos[d].z;
                 if (z < lowestZIndex) lowestZIndex = z;
@@ -477,12 +483,16 @@ control = {
             //  get the ones from the back first.
             for (var i = highestZIndex; i >= lowestZIndex; i--) {
                 for (d = 0; d < decoLength; d++ ) {
-                    if (room.dynamic.layers[layerId].decos[d].z == i) {
-                        room.dynamic.layers[layerId].items.push(room.dynamic.layers[layerId].decos[d]);
+                    if (decos[d].z == i) {
+                        room.dynamic.layers[layerId].items.push(decos[d]);
                         this.maxImageCount++;
                     }
                 }
             }
+
+            //  Keep the count: finishLevel publishes the manifest after decos
+            //  are removed, and the capture tool reads decoCount from there.
+            room.dynamic.layers[layerId].decoCount = decoLength;
 
             //  And now kill the decos just to tidy up
             delete room.dynamic.layers[layerId].decos;
@@ -494,8 +504,11 @@ control = {
         //  can display a loading progress bar.
         this.currentImageCount = this.maxImageCount;
 
-        //  Reset the failed loaded images
+        //  Reset the failed loaded images. Anything left out so the room can
+        //  still render is recorded in skippedAssets and returned with the layers.
         this.failedImageLoad = {};
+        this.skippedAssets = [];
+        this.noteUnpaintedLayers();
 
         //  TODO, put all the exits on the exits list
         this.loadImages();
@@ -559,17 +572,8 @@ control = {
         //  then we make a note of which image failed and move
         //  onto the next one
         newImg.bind('error', function() {
-            if (item.filename in control.failedImageLoad) {
-                control.failedImageLoad[item.filename]++;
-            } else {
-                control.failedImageLoad[item.filename] = 1;
-            }
-            control.currentImageCount--;
-            var percent = 100 - parseInt(control.currentImageCount / control.maxImageCount * 100, 10);
-            $('.percent').css('width', percent + '%');
-
-            $('.offscreenBuffer').empty();
-            control.loadImages();
+            control.noteSkipped(layerId, item.filename, 'missing-png');
+            control.advanceImageQueue();
         });
 
         //  If the image loaded then we need to move make a blitting canvas for it
@@ -647,36 +651,85 @@ control = {
             var flipMod = -1;
 
             var targetContext = $('#' + layerId + ' canvas')[0].getContext('2d');
+            var drawX = item.x - (blitThis.width() / 2);
+            var drawY = item.y - (blitThis.height() / 2);
+            //  Middleground x/y are room coordinates. Other layers are already
+            //  in that layer's own bitmap, with (0, 0) at its top-left.
             if (layerId == 'middleground') {
-                targetContext.drawImage(blitThis[0], item.x - (blitThis.width() / 2) + ($('#middleground canvas').width()/2), item.y - (blitThis.height() / 2) + ($('#middleground canvas').height()), blitThis.width(), blitThis.height());
-            } else {
-                targetContext.drawImage(blitThis[0], item.x - (blitThis.width() / 2), item.y - (blitThis.height() / 2), blitThis.width(), blitThis.height());
+                var origin = roomLayers.worldOrigin(room.dynamic);
+                drawX += origin.x;
+                drawY += origin.y;
             }
+            targetContext.drawImage(blitThis[0], drawX, drawY, blitThis.width(), blitThis.height());
 
-            //  Reduce down the current image count
-            control.currentImageCount--;
-            var percent = 100 - parseInt(control.currentImageCount / control.maxImageCount * 100, 10);
-            $('.percent').css('width', percent + '%');
-            //  Load the images again
-            $('.offscreenBuffer').empty();
-            control.loadImages();
+            control.advanceImageQueue();
         });
+
+        //  PNGs are the only scenery format this viewer serves.
+        //  Flash/SWF pieces are skipped and the layer is still painted.
+        var src = roomLayers.sceneryUrl(item.filename);
+        if (!src) {
+            control.noteSkipped(layerId, item.filename, 'flash');
+            control.advanceImageQueue();
+            return;
+        }
 
         //  Now attach the image to the offscreen buffer
         //  and load it.
         $('.offscreenBuffer').append(newImg);
-        newImg.attr('src', 'img/scenery/' + item.filename + '.png');
+        newImg.attr('src', src);
 
+    },
+
+    noteSkipped: function(layerId, filename, reason) {
+        var drop = roomLayers.droppedPiece(layerId, filename, reason);
+        this.skippedAssets.push(drop);
+        if (drop.filename) {
+            if (drop.filename in this.failedImageLoad) {
+                this.failedImageLoad[drop.filename]++;
+            } else {
+                this.failedImageLoad[drop.filename] = 1;
+            }
+        }
+    },
+
+    //  Layers with no usable size are not painted. Their pieces are still
+    //  reported, otherwise the omission would be invisible to the requester.
+    noteUnpaintedLayers: function() {
+        var queued = {};
+        var i;
+        for (i = 0; i < this.layerQueue.length; i++) queued[this.layerQueue[i]] = true;
+        var layers = (room.dynamic && room.dynamic.layers) || {};
+        for (var id in layers) {
+            if (!Object.prototype.hasOwnProperty.call(layers, id) || queued[id]) continue;
+            var decos = layers[id].decos || [];
+            for (i = 0; i < decos.length; i++) {
+                this.noteSkipped(id, decos[i].filename, 'unpainted-layer');
+            }
+        }
+    },
+
+    advanceImageQueue: function() {
+        this.currentImageCount--;
+        if (this.maxImageCount > 0) {
+            var percent = 100 - parseInt(this.currentImageCount / this.maxImageCount * 100, 10);
+            $('.percent').css('width', percent + '%');
+        }
+        $('.offscreenBuffer').empty();
+        this.loadImages();
     },
 
 
     //  This wraps up all the lose ends
     finishLevel: function() {
 
-        //  Display all the images that didn't load correctly
+        //  Display everything left out, including why, so the page is not silent.
         var newHtml = '';
-        for (var image in this.failedImageLoad) {
-            newHtml += image + '<br />';
+        for (var s = 0; s < this.skippedAssets.length; s++) {
+            var drop = this.skippedAssets[s];
+            newHtml += drop.filename + ' (' + drop.reason + ')';
+            if (drop.url) newHtml += ' ' + drop.url;
+            newHtml += '<br />';
         }
 
         if (newHtml !== '') {
@@ -694,10 +747,23 @@ control = {
         //  (optionally &w=2000 to scale the room to a target width).
         //  Anchors the stage at the top-left, hides the UI, and sets
         //  __RENDER_READY__ / __RENDER_W / __RENDER_H so a screenshot
-        //  tool can clip exactly to the whole room.
-        if (/[?&]render=1\b/.test(location.search)) {
+        //  tool can clip exactly to the whole room. Layers, including anything
+        //  dropped so the room could render, are published on every load.
+        //  Add &platforms=1 to also publish platform lines.
+        var renderParams = location.search;
+        if (/[?&]platforms=1\b/.test(renderParams)) {
+            window.__RENDER_PLATFORMS__ = roomLayers.platformLocations(room, control.currentRoomId);
+        }
+
+        //  Publish layers before __RENDER_READY__. dropped is part of that
+        //  response: pieces left out so the room could still render.
+        var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice());
+        window.__RENDER_LAYERS__ = manifest;
+        window.__RENDER_SKIPPED__ = manifest.dropped;
+
+        if (/[?&]render=1\b/.test(renderParams)) {
             control.renderMode = true;
-            var rwMatch = location.search.match(/[?&]w=(\d+)/);
+            var rwMatch = renderParams.match(/[?&]w=(\d+)/);
             var targetW = rwMatch ? parseInt(rwMatch[1], 10) : control.stageWidth;
             control.renderScale = Math.min(1, targetW / control.stageWidth);
             var rk = control.renderScale;
