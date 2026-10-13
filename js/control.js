@@ -110,8 +110,8 @@ control = {
         //  start to fill it back up again
         $('.stage').stop(true, false);
         $('.stage').empty();
+        $('.stage').css('opacity', 0);
         window.scrollTo(0,0);
-        $('.stage').fadeTo(666, 1);
         $('.loading_holder').fadeIn(666);
 
         //  First thing we want to do is set the stage, so lets get the stage size and
@@ -673,6 +673,8 @@ control = {
     //  This wraps up all the lose ends
     finishLevel: function() {
 
+        var renderMode = /[?&]render=1\b/.test(location.search);
+
         //  Display all the images that didn't load correctly
         var newHtml = '';
         for (var image in this.failedImageLoad) {
@@ -686,6 +688,9 @@ control = {
         }
 
         $('.loading_holder').fadeOut(600);
+        if (!renderMode) {
+            $('.stage').fadeTo(666, 1);
+        }
 
         control.loadtime.end = new Date();
         console.log('Load time: ' + (control.loadtime.end - control.loadtime.start) + 'ms');
@@ -695,7 +700,7 @@ control = {
         //  Anchors the stage at the top-left, hides the UI, and sets
         //  __RENDER_READY__ / __RENDER_W / __RENDER_H so a screenshot
         //  tool can clip exactly to the whole room.
-        if (/[?&]render=1\b/.test(location.search)) {
+        if (renderMode) {
             control.renderMode = true;
             var rwMatch = location.search.match(/[?&]w=(\d+)/);
             var targetW = rwMatch ? parseInt(rwMatch[1], 10) : control.stageWidth;
@@ -707,6 +712,7 @@ control = {
                 'left': 0,
                 'top': 0,
                 'z-index': 1,
+                'opacity': 1,
                 'transform': 'scale(' + rk + ')',
                 'transform-origin': 'top left'
             });
