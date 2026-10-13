@@ -1,0 +1,39 @@
+# Gate for the static deployments (GitHub Pages and Vercel). Neither runs a
+# build, so this verifies the data and the served files instead: every room
+# JSON parses, callback wrappers pair with their data, the page's local
+# assets exist, and a plain static server serves what the browsers fetch.
+name: Deployment checks
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: deploy-checks
+  cancel-in-progress: true
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - run: node --test tests/*.test.mjs
+      - name: Smoke test the static site as Vercel would serve it
+        run: |
+          python3 -m http.server 8091 --bind 127.0.0.1 >/dev/null 2>&1 &
+          SERVER=$!
+          trap "kill $SERVER 2>/dev/null" EXIT
+          sleep 1
+          curl -fsS http://127.0.0.1:8091/ | grep -q 'MVURXI'
+          curl -fsS http://127.0.0.1:8091/css/main.css >/dev/null
+          curl -fsS http://127.0.0.1:8091/js/control.js >/dev/null
+          curl -fsS http://127.0.0.1:8091/js/player.js >/dev/null
+          ROOM=$(sed -n "s/.*startRoom = '\([A-Z0-9]*\)'.*/\1/p" index.html)
+          test -n "$ROOM"
+          curl -fsS "http://127.0.0.1:8091/locations/$ROOM.callback.json" -o /tmp/callback.json
+          head -c 9 /tmp/callback.json | grep -q '^getRoom({'
+          echo "static site smoke test passed"
