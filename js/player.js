@@ -398,16 +398,13 @@ player = {
             return;
         }
 
-        var middleGroundOffset = player.position.x - (control.stageHolderWidth / 2);
-        if (middleGroundOffset < 0) middleGroundOffset = 0;
-        if (middleGroundOffset > control.stageWidth - control.stageHolderWidth) middleGroundOffset = control.stageWidth - control.stageHolderWidth;
-        var currentPercent = middleGroundOffset / (control.stageWidth - control.stageHolderWidth);
+        var currentPercent = roomLayers.cameraPercent(player.position.x, control.stageWidth, control.stageHolderWidth);
 
         var len = control.layersId.length;
         while (len--) {
-            layerId = control.layersId[len];
+            var layerId = control.layersId[len];
             try {
-                room.dynamic.layers[layerId].offset = ((room.dynamic.layers[layerId].w - control.stageHolderWidth) * -currentPercent);
+                room.dynamic.layers[layerId].offset = roomLayers.layerTranslate(room.dynamic.layers[layerId].w, currentPercent, control.stageHolderWidth);
                 $('#' + layerId).css('transform', 'translateX(' + room.dynamic.layers[layerId].offset + 'px)' );
             } catch(er) {//nowt
             }

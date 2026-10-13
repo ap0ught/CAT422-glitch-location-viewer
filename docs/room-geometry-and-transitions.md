@@ -17,6 +17,42 @@ Baram Sum room currently contains 66 platform segments. Coordinates are
 when connecting a physics engine; do not assume these are solid platforms
 without interpreting the original permission flags.
 
+The viewer serves the same payload for the loaded room on
+`window.__RENDER_PLATFORMS__` only when `platforms=1` is present in the URL.
+Platform lines are not painted into the scenery canvases.
+
+## Served layers (PR #5 contract)
+`?render=1#/ROOM` still frames the room for a full-stage capture. Before
+`window.__RENDER_READY__` becomes true, it publishes a version 1 manifest on
+`window.__RENDER_LAYERS__`. Its `layers` array lists all source layers back to
+front, with `id`, `name`, `z`, `w`, `h`, `gameplay`, `canvasId`, `decoCount`, and
+`dropped`. Paint is on `#<id>_canvas`, for example `#middleground_canvas`.
+`middleground` is the gameplay layer. Other layers move independently according
+to their width: `Math.floor(percent * (viewport - layerSpan))`, with percent 0
+at the near edge and 1 at the far edge. Runtime motion uses the existing canvas
+viewer; three.js and additional art packs are not needed.
+
+Scenery is requested only as `img/scenery/<name>.png`. Flash/SWF is not served;
+JPEG/GIF filename extensions resolve to the PNG counterpart, not those formats.
+Missing PNGs, Flash pieces, and pieces on unpainted layers do not fail the room.
+They appear in the manifest's `dropped` array, each layer's `dropped`, and
+`window.__RENDER_SKIPPED__`. Each entry has `layerId`, `filename`, `reason`
+(`missing-png`, `flash`, `unpainted-layer`), and `url` (null for Flash).
+A layer without usable dimensions has no painted canvas, but remains in the
+manifest so consumers can report the omission.
+
+Workshop capture should wait for `__RENDER_READY__`, save the manifest, and
+capture each available canvas in `__RENDER_LAYERS__.layers` using its `canvasId`,
+rather than flattening the page into one PNG. Keep the street even when
+`dropped` is non-empty. Raw canvas PNGs preserve native resolution and
+transparency; `w=` scales only the framed page. CSS layer filters and the stage
+gradient are not baked into raw canvas pixels, so consumers needing the exact
+composite must retain those effects separately or capture styled layers.
+The workshop's `tools/render-rooms.mjs` is not in this repository; its capture
+integration belongs to `ap0ught/puzzle-workshop#38`.
+
+Run `node --test tests/room-layers.test.mjs` to check this contract.
+
 ## Signposts and doors
 The viewer already converts signpost connections and shows them in the Exits
 list. The change in this branch routes clicks through a transition helper that
