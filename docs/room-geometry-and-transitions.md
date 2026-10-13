@@ -30,6 +30,14 @@ manifest's formula, `Math.floor(percent * (viewport - layerSpan))`, where
 percent is 0 at the near edge of the room and 1 at the far edge. The
 middleground layer is the gameplay layer (`gameplay: true`).
 
+Add `layers=middleground` or `layers=middleground,sky` to paint only those
+layers. Any other layer is left out of the image queue: its scenery is not
+requested and it gets no canvas. The manifest still lists it, with
+`painted: false`, `canvasId: null`, and `omitReason: "not-requested"`. Its
+decorations are not copied into `dropped`. An id in `layers` that the room
+does not have is listed on `notFound`. Omit `layers` to paint every layer
+that has a size.
+
 Scenery is requested only as `img/scenery/<filename>.png`. Flash/SWF files are
 not requested. A missing PNG, a Flash file, or a piece on a layer that cannot
 be painted is still returned to the requester. The list is
