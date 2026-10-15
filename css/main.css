@@ -34,6 +34,29 @@ html, body {
     border-radius: 4px;
 }
 
+/* Capture pages hide the loading panel and sidebar before the first paint. */
+html.render-capture .loading_holder,
+html.render-capture .instructions,
+html.render-capture .nameChange,
+html.render-capture .globalChat,
+html.render-capture .localChat,
+html.render-capture .exits,
+html.render-capture .debug,
+html.render-capture .location_holder,
+html.render-capture .player_holder {
+    display: none !important;
+}
+
+html.render-capture .stage_holder {
+    position: static;
+    top: 0;
+    left: 0;
+    height: auto;
+    margin: 0;
+    overflow: visible;
+    border-radius: 0;
+}
+
 .stage {
     width: 100%;
     height: 100%;
@@ -61,8 +84,11 @@ html, body {
 
 .debug {
     position: fixed;
-    bottom: 0;
-    left: 0;
+    right: 8px;
+    bottom: 8px;
+    max-width: 280px;
+    max-height: 160px;
+    overflow: auto;
     background: black;
     font-family: monospace;
     font-size: 12px;

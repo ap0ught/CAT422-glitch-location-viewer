@@ -32,7 +32,19 @@ control = {
         end: null
     },
 
+    isRenderCapture: function() {
+        return /[?&]render=1\b/.test(location.search);
+    },
+
     init: function(roomId) {
+
+        //  Capture mode is decided by the URL, before any room paint, so the
+        //  loading panel and sidebar never get a frame.
+        if (this.isRenderCapture()) {
+            this.renderMode = true;
+            this.renderScale = 1;
+            document.documentElement.classList.add('render-capture');
+        }
 
         //  update the percentageOf if we resize the window
         $(window).bind('resize', function() {
@@ -69,9 +81,9 @@ control = {
         this.currentRoomId = roomId;
 
         //  Now fade down the stage (we will empty it
-        //  when we have the new room loaded)
+        //  when we have the new room loaded). Capture mode stays put.
         $('.stage').stop(true, false);
-        $('.stage').fadeTo(1333, 0.1);
+        if (!this.renderMode) $('.stage').fadeTo(1333, 0.1);
         $('.location').text('');
         $('.player_holder').remove();
         $('.other_player_holders').remove();
@@ -112,22 +124,11 @@ control = {
 
 
     configureLayers: function(data) {
-        var params = new URLSearchParams(location.search);
-        this.metadataOnly = params.get('getLayers') === '1';
+        this.metadataOnly = new URLSearchParams(location.search).get('getLayers') === '1';
         this.gameObject = data;
-        if (!this.metadataOnly && params.has('displayLayers')) {
-            var ids = params.get('displayLayers').split(',').map(function(id) { return id.trim(); });
-            var layers = Object.create(null);
-            Object.keys(data.dynamic.layers).forEach(function(id) {
-                if (ids.indexOf(id) !== -1) {
-                    layers[id] = data.dynamic.layers[id];
-                }
-            });
-            this.gameObject = Object.assign({}, data, {
-                dynamic: Object.assign({}, data.dynamic, {layers: layers})
-            });
-        }
+        this.requestedLayers = this.metadataOnly ? null : roomLayers.requestedLayerIds(location.search);
     },
+
 
     //  Create the stage and put the gradient background in.
     prepStage: function() {
@@ -142,20 +143,37 @@ control = {
         $('.stage').stop(true, false);
         $('.stage').empty();
         window.scrollTo(0,0);
-        $('.stage').fadeTo(666, 1);
-        $('.loading_holder').fadeIn(666);
+        if (this.renderMode) {
+            $('.stage').css('opacity', 1);
+            $('.loading_holder').hide();
+        } else {
+            $('.stage').fadeTo(666, 1);
+            $('.loading_holder').fadeIn(666);
+        }
 
         //  First thing we want to do is set the stage, so lets get the stage size and
         //  gradient.
-        $('.stage').css({
-            position: 'absolute',
-            overflow: 'hidden',
-            width: parseInt(room.dynamic.r, 10) - parseInt(room.dynamic.l, 10),
-            height: parseInt(room.dynamic.b, 10) - parseInt(room.dynamic.t, 10),
-            'z-index': -1000
-        });
         control.stageWidth = parseInt(room.dynamic.r, 10) - parseInt(room.dynamic.l, 10);
         control.stageHeight = parseInt(room.dynamic.b, 10) - parseInt(room.dynamic.t, 10);
+        var stageCss = {
+            position: 'absolute',
+            overflow: 'hidden',
+            width: control.stageWidth,
+            height: control.stageHeight,
+            'z-index': -1000
+        };
+        if (this.renderMode) {
+            var earlyWidth = location.search.match(/[?&]w=(\d+)/);
+            var earlyTarget = earlyWidth ? parseInt(earlyWidth[1], 10) : control.stageWidth;
+            this.renderScale = Math.min(1, earlyTarget / control.stageWidth);
+            stageCss.position = 'fixed';
+            stageCss.left = 0;
+            stageCss.top = 0;
+            stageCss['z-index'] = 1;
+            stageCss['transform-origin'] = 'top left';
+            stageCss.transform = 'scale(' + this.renderScale + ')';
+        }
+        $('.stage').css(stageCss);
 
         if (this.metadataOnly) {
             this.layerQueue = [];
@@ -244,11 +262,15 @@ control = {
 
         //  loop thru the z-indexes, from back to front
         this.layerQueue = [];
+        this.layersId = [];
+        //  `layers=` names the canvases to paint. Everything else stays in
+        //  the manifest and is never queued, so its images are not fetched.
+        this.requestedLayers = roomLayers.requestedLayerIds(location.search);
         for (var z = lowestZIndex; z <= highestZIndex; z++) {
             //  loop thru the layers to find the layer that
             //  matches the z-index we are looking for
             $.each(room.dynamic.layers, function (id, layer) {
-                if (layer.z == z && isFinite(parseInt(layer.w, 10)) && isFinite(parseInt(layer.h, 10))) {
+                if (layer.z == z && isFinite(parseInt(layer.w, 10)) && isFinite(parseInt(layer.h, 10)) && roomLayers.layerIsRequested(control.requestedLayers, id)) {
                     control.layerQueue.push(id);
                     control.layersId.push(id);
                 }
@@ -270,20 +292,24 @@ control = {
             id = this.layerQueue[l];
             layer = room.dynamic.layers[id];
 
+            var layerW = parseInt(layer.w, 10);
+            var layerH = parseInt(layer.h, 10);
+
             newLayer = $('<div>');
             newLayer.attr('id', id);
+            newLayer.attr('data-layer', id);
             newLayer.css({
                 'position': 'absolute',
-                'width': parseInt(layer.w, 10),
-                'height': parseInt(layer.h, 10),
+                'width': layerW,
+                'height': layerH,
                 'left': 0,
-                'top': parseInt($('.stage').css('height'), 10) - parseInt(layer.h, 10),
+                'top': parseInt($('.stage').css('height'), 10) - layerH,
                 'z-index': parseInt(layer.z, 10)
             });
 
             //  Attach a canvas object to the layer
-            newCanvas = $('<canvas>').attr({id: id + '_canvas', width: parseInt(layer.w, 10), height: parseInt(layer.h, 10)})
-                .css({width: parseInt(layer.w, 10), height: parseInt(layer.h, 10)})
+            newCanvas = $('<canvas>').attr({id: id + '_canvas', width: layerW, height: layerH})
+                .css({width: layerW, height: layerH})
                 .css({position: 'absolute', top: 0, left: 0});
 
             //  Check for filters
@@ -527,7 +553,8 @@ control = {
                 }
             }
 
-            //  Keep the count for the manifest after decos are removed.
+            //  Keep the count: finishLevel publishes the manifest after decos
+            //  are removed, and the capture tool reads decoCount from there.
             room.dynamic.layers[layerId].decoCount = decoLength;
 
             //  And now kill the decos just to tidy up
@@ -540,7 +567,8 @@ control = {
         //  can display a loading progress bar.
         this.currentImageCount = this.maxImageCount;
 
-        //  Reset the failed loaded images
+        //  Reset the failed loaded images. Anything left out so the room can
+        //  still render is recorded in skippedAssets and returned with the layers.
         this.failedImageLoad = {};
         this.skippedAssets = [];
         this.noteUnpaintedLayers();
@@ -691,7 +719,8 @@ control = {
             var targetContext = $('#' + layerId + ' canvas')[0].getContext('2d');
             var drawX = item.x - (blitThis.width() / 2);
             var drawY = item.y - (blitThis.height() / 2);
-            //  Middleground uses room coordinates; other layers are bitmap-local.
+            //  Middleground x/y are room coordinates. Other layers are already
+            //  in that layer's own bitmap, with (0, 0) at its top-left.
             if (layerId == 'middleground') {
                 var origin = roomLayers.worldOrigin(room.dynamic);
                 drawX += origin.x;
@@ -703,6 +732,7 @@ control = {
         });
 
         //  PNGs are the only scenery format this viewer serves.
+        //  Flash/SWF pieces are skipped and the layer is still painted.
         var src = roomLayers.sceneryUrl(item.filename);
         if (!src) {
             control.noteSkipped(layerId, item.filename, 'flash');
@@ -729,7 +759,8 @@ control = {
         }
     },
 
-    //  Report pieces on layers that cannot be painted.
+    //  Layers with no usable size are not painted. Their pieces are still
+    //  reported, otherwise the omission would be invisible to the requester.
     noteUnpaintedLayers: function() {
         var queued = {};
         var i;
@@ -737,6 +768,9 @@ control = {
         var layers = (room.dynamic && room.dynamic.layers) || {};
         for (var id in layers) {
             if (!Object.prototype.hasOwnProperty.call(layers, id) || queued[id]) continue;
+            //  A layer the URL did not ask for is not a failed paint. Leave
+            //  its decorations unread so they are not fetched or listed.
+            if (!roomLayers.layerIsRequested(this.requestedLayers, id)) continue;
             var decos = layers[id].decos || [];
             for (i = 0; i < decos.length; i++) {
                 this.noteSkipped(id, decos[i].filename, 'unpainted-layer');
@@ -753,6 +787,7 @@ control = {
         $('.offscreenBuffer').empty();
         this.loadImages();
     },
+
 
     updateLayerControls: function(manifest) {
         var list = document.getElementById('layerControls');
@@ -788,14 +823,19 @@ control = {
         });
     },
 
+
     //  This wraps up all the lose ends
     finishLevel: function() {
 
-        //  Display everything left out, including why.
+        //  Display repeated omissions as one text line so filenames remain text.
+        var summary = roomLayers.summarizeDropped(this.skippedAssets);
         var missing = [];
-        for (var s = 0; s < this.skippedAssets.length; s++) {
-            var drop = this.skippedAssets[s];
-            missing.push(drop.filename + ' (' + drop.reason + ')' + (drop.url ? ' ' + drop.url : ''));
+        for (var s = 0; s < summary.length; s++) {
+            var drop = summary[s];
+            var line = drop.filename + ' (' + drop.reason + ')';
+            if (drop.count > 1) line += ' ×' + drop.count;
+            if (drop.url) line += ' ' + drop.url;
+            missing.push(line);
         }
 
         if (missing.length) {
@@ -804,7 +844,8 @@ control = {
             $('.debug').empty();
         }
 
-        $('.loading_holder').fadeOut(600);
+        if (this.renderMode) $('.loading_holder').hide();
+        else $('.loading_holder').fadeOut(600);
 
         control.loadtime.end = new Date();
         console.log('Load time: ' + (control.loadtime.end - control.loadtime.start) + 'ms');
@@ -813,16 +854,17 @@ control = {
         //  (optionally &w=2000 to scale the room to a target width).
         //  Anchors the stage at the top-left, hides the UI, and sets
         //  __RENDER_READY__ / __RENDER_W / __RENDER_H so a screenshot
-        //  tool can clip exactly to the whole room.
+        //  tool can clip exactly to the whole room. Layers, including anything
+        //  dropped so the room could render, are published on every load.
+        //  Add &platforms=1 to also publish platform lines.
         var renderParams = location.search;
         if (/[?&]platforms=1\b/.test(renderParams)) {
             window.__RENDER_PLATFORMS__ = roomLayers.platformLocations(room, control.currentRoomId);
-        } else {
-            delete window.__RENDER_PLATFORMS__;
         }
 
-        //  Publish the complete response before signaling capture readiness.
-        var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice());
+        //  Publish layers before __RENDER_READY__. dropped is part of that
+        //  response: pieces left out so the room could still render.
+        var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice(), control.requestedLayers);
         window.__RENDER_LAYERS__ = manifest;
         window.__RENDER_SKIPPED__ = manifest.dropped;
         this.updateLayerControls(manifest);
@@ -942,7 +984,6 @@ function getRoom(dataJSON) {
     if (script.parentNode) script.parentNode.removeChild(script);
     if (script.loadGeneration !== control.loadGeneration) return;
 
-    //  Store the data
     control.configureLayers(dataJSON);
 
     //  prep the stage

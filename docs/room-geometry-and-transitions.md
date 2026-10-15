@@ -17,54 +17,45 @@ Baram Sum room currently contains 66 platform segments. Coordinates are
 when connecting a physics engine; do not assume these are solid platforms
 without interpreting the original permission flags.
 
-The viewer serves the same payload for the loaded room on
-`window.__RENDER_PLATFORMS__` only when `platforms=1` is present in the URL.
-Platform lines are not painted into the scenery canvases.
+The viewer can serve the same payload for any loaded room without writing a
+file: add `platforms=1` to the page URL. It is omitted unless that flag is set.
+The value is `window.__RENDER_PLATFORMS__`.
 
-## Served layers (PR #5 contract)
-`?render=1#/ROOM` still frames the room for a full-stage capture. Before
-`window.__RENDER_READY__` becomes true, it publishes a version 1 manifest on
-`window.__RENDER_LAYERS__`. Its `layers` array lists all source layers back to
-front, with `id`, `name`, `z`, `w`, `h`, `gameplay`, `canvasId`, `decoCount`, and
-`dropped`. Paint is on `#<id>_canvas`, for example `#middleground_canvas`.
-`middleground` is the gameplay layer. Other layers move independently according
-to their width: `Math.floor(percent * (viewport - layerSpan))`, with percent 0
-at the near edge and 1 at the far edge. Runtime motion uses the existing canvas
-viewer; three.js and additional art packs are not needed.
+## Served layers
+`?render=1#/ROOM` still frames the room for a full-stage capture. The loading
+panel and sidebar are hidden before the first paint. It also
+publishes each source layer on `window.__RENDER_LAYERS__` (back to front) once
+`window.__RENDER_READY__` is true. Paint for a layer is the canvas
+`#<id>_canvas`, for example `#middleground_canvas`. Scroll a layer with the
+manifest's formula, `Math.floor(percent * (viewport - layerSpan))`, where
+percent is 0 at the near edge of the room and 1 at the far edge. The
+middleground layer is the gameplay layer (`gameplay: true`).
 
-### Layer URL arguments
-- `?getLayers=1#/ROOM` publishes the full layer manifest on
-  `window.__RENDER_LAYERS__` and sets `window.__RENDER_READY__` without creating
-  canvases, processing decorations, or requesting scenery. This is a browser
-  metadata response, not a JSON HTTP endpoint. The room data still loads.
-- `?render=1&displayLayers=middleground#/ROOM` renders only middleground.
-  Pass multiple exact layer IDs separated by commas, for example
-  `displayLayers=middleground,T_1314039143686`. Only selected layers enter the
-  canvas/scenery pipeline and appear in the returned manifest; excluded layers
-  are not loaded or processed and are not reported as dropped.
-- Without `displayLayers`, all layers render as before. An empty value or
-  unknown IDs select no layers (no fallback to all). Duplicates are ignored.
-  `getLayers=1` takes precedence over `displayLayers`, returning the full list.
-  `platforms=1` remains optional and uses the returned layers.
+Add `layers=middleground` or `layers=middleground,sky` to paint only those
+layers. `displayLayers` is an alias. Any other layer is left out of the image
+queue: its scenery is not requested and it gets no canvas. The manifest still
+lists it, with `painted: false`, `canvasId: null`, and
+`omitReason: "not-requested"`. Its decorations are not copied into `dropped`.
+An id in the selection that the room does not have is listed on `notFound`.
+Omit both selection arguments to paint every layer that has a size.
 
-For example, first open `?getLayers=1#/GIFPD818SEI26JR` to discover layer IDs,
-then open `?render=1&displayLayers=middleground#/GIFPD818SEI26JR` to capture just
-that canvas. URL selection also applies when navigating to another room.
+Add `getLayers=1` to publish all layer metadata without creating canvases or
+requesting scenery. This takes precedence over either layer-selection argument.
 
-In the right sidebar, **Enable/disable layers** opens visibility links for each
-painted layer in the current room. Disabling a layer hides only its scenery
-canvas, not the player or its parallax transform. The list refreshes on room
-changes; newly loaded canvases start visible. These controls are hidden in
-render mode and do not change raw canvas pixels or the capture manifest.
+The right sidebar's **Enable/disable layers** links toggle each painted canvas
+independently. They do not alter the raw canvas or manifest and are hidden in
+render mode.
 
-Scenery is requested only as `img/scenery/<name>.png`. Flash/SWF is not served;
-JPEG/GIF filename extensions resolve to the PNG counterpart, not those formats.
-Missing PNGs, Flash pieces, and pieces on unpainted layers do not fail the room.
-They appear in the manifest's `dropped` array, each layer's `dropped`, and
-`window.__RENDER_SKIPPED__`. Each entry has `layerId`, `filename`, `reason`
-(`missing-png`, `flash`, `unpainted-layer`), and `url` (null for Flash).
-A layer without usable dimensions has no painted canvas, but remains in the
-manifest so consumers can report the omission.
+Scenery is requested only as `img/scenery/<filename>.png`. Flash/SWF files are
+not requested. A missing PNG, a Flash file, or a piece on a layer that cannot
+be painted is still returned to the requester. The list is
+`window.__RENDER_LAYERS__.dropped` (and each layer's own `dropped` array).
+`window.__RENDER_SKIPPED__` is that same list. Each entry has `layerId`,
+`filename`, `reason` (`missing-png`, `flash`, or `unpainted-layer`), and `url`
+(the PNG that was requested, or null when no PNG is served). The room is still
+served. The on-page missing-image list groups those entries by filename, so a
+file used many times is one line with a count. The panel scrolls if the unique
+list is still long.
 
 Workshop capture should wait for `__RENDER_READY__`, save the manifest, and
 capture each available canvas in `__RENDER_LAYERS__.layers` using its `canvasId`,
@@ -75,8 +66,6 @@ gradient are not baked into raw canvas pixels, so consumers needing the exact
 composite must retain those effects separately or capture styled layers.
 The workshop's `tools/render-rooms.mjs` is not in this repository; its capture
 integration belongs to `ap0ught/puzzle-workshop#38`.
-
-Run `node --test tests/room-layers.test.mjs` to check this contract.
 
 ## Signposts and doors
 The viewer already converts signpost connections and shows them in the Exits

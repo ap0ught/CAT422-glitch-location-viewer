@@ -155,15 +155,20 @@ test('render readiness publishes layers and omissions, with platforms only when 
 test('displayLayers selects exact IDs before processing and defaults to all', () => {
     for (const [search, expected] of [
         ['', Object.keys(room.dynamic.layers)],
+        ['?layers=middleground', ['middleground']],
+        ['?layers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground', 'unknown']],
         ['?displayLayers=middleground', ['middleground']],
-        ['?displayLayers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground']],
+        ['?displayLayers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground', 'unknown']],
         ['?displayLayers=', []],
-        ['?displayLayers=unknown', []],
+        ['?displayLayers=unknown', ['unknown']],
         ['?displayLayers=%20middleground%20', ['middleground']]
     ]) {
         const {context} = viewer(search);
         context.control.configureLayers(context.room);
-        assert.deepEqual(Object.keys(context.control.gameObject.dynamic.layers).sort(), expected.sort());
+        const requested = context.control.requestedLayers;
+        const ids = requested === null ? Object.keys(context.room.dynamic.layers) : Object.keys(requested);
+        assert.deepEqual(ids.sort(), expected.sort());
+        assert.equal(Object.keys(context.control.gameObject.dynamic.layers).length, 8);
         assert.equal(Object.keys(context.room.dynamic.layers).length, 8, 'source layer tree is not modified');
     }
 });
@@ -177,10 +182,20 @@ test('excluded decorations are not inspected or reported as unpainted', () => {
     context.room = context.control.gameObject;
     context.control.layerQueue = ['middleground'];
     context.control.noteUnpaintedLayers();
-    context.control.finishLevel();
-    assert.deepEqual(Array.from(context.window.__RENDER_LAYERS__.layers, l => l.id), ['middleground']);
-    assert.equal(context.window.__RENDER_SKIPPED__.length, 0);
+    assert.equal(context.control.skippedAssets.length, 0);
     assert.equal(requests.length, 0);
+});
+
+test('layer manifest reports requested layers and missing IDs', () => {
+    const requested = roomLayers.requestedLayerIds('?layers=middleground%2Csky');
+    assert.deepEqual(requested, {middleground: true, sky: true});
+    const manifest = roomLayers.layerManifest(room, roomId, [], requested);
+    const painted = manifest.layers.filter(layer => layer.painted);
+    assert.deepEqual(painted.map(layer => layer.id), ['middleground']);
+    assert.equal(painted[0].canvasId, 'middleground_canvas');
+    assert.equal(manifest.layers.find(layer => layer.id !== 'middleground').omitReason, 'not-requested');
+    assert.deepEqual(manifest.notFound, ['sky']);
+    assert.deepEqual(roomLayers.layerManifest(room, roomId).notFound, []);
 });
 
 test('getLayers returns all metadata without invoking the canvas or image pipeline', () => {

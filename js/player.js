@@ -398,6 +398,28 @@ player = {
             return;
         }
 
+        //  A street that nearly fits the window is shown whole and centered.
+        //  Wider streets keep the walking camera.
+        var fitX = control.stageHolderWidth / control.stageWidth;
+        var fitY = control.stageHolderHeight / control.stageHeight;
+        if (fitX >= 0.75 && fitY >= 0.75) {
+            var fit = Math.min(fitX, fitY, 1);
+            var tx = (control.stageHolderWidth - control.stageWidth * fit) / 2;
+            var ty = (control.stageHolderHeight - control.stageHeight * fit) / 2;
+            var n = control.layersId.length;
+            while (n--) {
+                $('#' + control.layersId[n]).css('transform', 'translateX(0px)');
+            }
+            $('.stage').css({
+                'transform-origin': 'top left',
+                'transform': 'translate(' + tx + 'px,' + ty + 'px) scale(' + fit + ')'
+            });
+            $('.player_holder').css({
+                'transform': 'translateX(' + (player.position.x - (player.size.width/2)) + 'px) translateY(' + (control.stageHeight - player.position.y - player.size.height) + 'px)'
+            });
+            return;
+        }
+
         var currentPercent = roomLayers.cameraPercent(player.position.x, control.stageWidth, control.stageHolderWidth);
 
         var len = control.layersId.length;
