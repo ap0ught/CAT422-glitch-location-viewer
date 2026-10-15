@@ -1,5 +1,6 @@
 <html>
 <head>
+    <meta charset="utf-8" />
     <title>MVURXI</title>
     <link rel="stylesheet" type="text/css" href="css/main.css?v=0.9.9" />
     <script>
@@ -90,11 +91,13 @@
             Chrome YES, Firefox MAYBE,<br>
             Safari SLOW. IE??? Pfff.
         </p>
+        <p><a class="layerControlsToggle" href="#layerControls" aria-controls="layerControls" aria-expanded="false">Enable/disable layers</a></p>
+        <ul id="layerControls" aria-label="Layer visibility" hidden></ul>
     </div>
 
     <script src="js/jquery-2.0.3.min.js"></script>
     <script src="js/room-layers.js?v=0.9.9"></script>
-    <script src="js/control.js?v=0.9.9"></script>
+    <script src="js/control.js?v=0.9.10"></script>
     <script src="js/player.js?v=0.9.9"></script>
     <script>
         // The multiplayer chat server (mvurxi.com:8025) is retired.
@@ -115,6 +118,12 @@
                 //  Nowt!
             }
             control.init(startRoom);
+            $('.layerControlsToggle').bind('click', function(event) {
+                event.preventDefault();
+                var list = document.getElementById('layerControls');
+                list.hidden = !list.hidden;
+                this.setAttribute('aria-expanded', String(!list.hidden));
+            });
         });
     </script>
 </body>

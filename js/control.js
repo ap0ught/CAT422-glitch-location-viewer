@@ -6,6 +6,7 @@ control = {
     currentImageCount: 0,
     failedImageLoad: {},
     skippedAssets: [],
+    metadataOnly: false,
 
     layersId: [],
     layersIdLength: 0,
@@ -25,6 +26,7 @@ control = {
 
     loadingRoom: true,
     loadingItem: null,
+    loadGeneration: 0,
     loadtime: {
         start: null,
         end: null
@@ -70,6 +72,7 @@ control = {
     */
     loadRoom: function(roomId) {
         roomId = String(roomId).replace(/^L/, 'G');
+        var loadGeneration = ++this.loadGeneration;
 
 
         control.loadtime.start = new Date();
@@ -88,10 +91,16 @@ control = {
         player.otherUsers = {};
         player.loaded = false;
         $('.exits').empty();
+        $('#layerControls').empty();
 
         //  Empty the layerQueue, and the imageQueue
         this.layerQueue = [];
         this.imageQueue = [];
+        this.layersId = [];
+        window.__RENDER_READY__ = false;
+        delete window.__RENDER_LAYERS__;
+        delete window.__RENDER_SKIPPED__;
+        delete window.__RENDER_PLATFORMS__;
 
         //  Because we are loading this from github where we have
         //  no control over the backend, we're going to use
@@ -106,8 +115,18 @@ control = {
         //  ...without needing to worry about cross-domain stuff.
         //  Note that we're loading the room
         this.loadingRoom = true;
-        $.getScript('locations/' + roomId + '.callback.json');
+        var script = document.createElement('script');
+        script.src = 'locations/' + roomId + '.callback.json';
+        script.loadGeneration = loadGeneration;
+        document.head.appendChild(script);
 
+    },
+
+
+    configureLayers: function(data) {
+        this.metadataOnly = new URLSearchParams(location.search).get('getLayers') === '1';
+        this.gameObject = data;
+        this.requestedLayers = this.metadataOnly ? null : roomLayers.requestedLayerIds(location.search);
     },
 
 
@@ -155,6 +174,17 @@ control = {
             stageCss.transform = 'scale(' + this.renderScale + ')';
         }
         $('.stage').css(stageCss);
+
+        if (this.metadataOnly) {
+            this.layerQueue = [];
+            this.layersId = [];
+            this.maxImageCount = this.currentImageCount = 0;
+            this.failedImageLoad = {};
+            this.skippedAssets = [];
+            this.loadingRoom = false;
+            this.finishLevel();
+            return;
+        }
 
         //  Pad the gratients (yes we could use loopy things but you know
         //  obvious code is obvious)
@@ -590,6 +620,7 @@ control = {
 
         //  If we are loading a new room, then don't do any of this
         if (this.loadingRoom) return;
+        var loadGeneration = this.loadGeneration;
         
         //  Prep the image
         var newImg = $('<img>');
@@ -605,6 +636,7 @@ control = {
         //  then we make a note of which image failed and move
         //  onto the next one
         newImg.bind('error', function() {
+            if (loadGeneration !== control.loadGeneration) return;
             control.noteSkipped(layerId, item.filename, 'missing-png');
             control.advanceImageQueue();
         });
@@ -612,6 +644,7 @@ control = {
         //  If the image loaded then we need to move make a blitting canvas for it
         //  and move it over.
         newImg.bind('load', function() {
+            if (loadGeneration !== control.loadGeneration) return;
 
 
             var thisImg = this;
@@ -756,23 +789,57 @@ control = {
     },
 
 
+    updateLayerControls: function(manifest) {
+        var list = document.getElementById('layerControls');
+        if (!list) return;
+        list.textContent = '';
+        manifest.layers.forEach(function(layer) {
+            var canvas = document.getElementById(layer.canvasId);
+            if (!canvas) return;
+            var item = document.createElement('li');
+            var link = document.createElement('a');
+            link.href = '#' + layer.canvasId;
+            link.setAttribute('role', 'button');
+            link.setAttribute('aria-controls', layer.canvasId);
+            function updateLabel() {
+                var visible = canvas.style.visibility !== 'hidden';
+                link.textContent = (visible ? 'Disable ' : 'Enable ') + layer.name;
+                link.setAttribute('aria-pressed', String(visible));
+            }
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                canvas.style.visibility = canvas.style.visibility === 'hidden' ? 'visible' : 'hidden';
+                updateLabel();
+            });
+            link.addEventListener('keydown', function(event) {
+                if (event.key === ' ') {
+                    event.preventDefault();
+                    link.click();
+                }
+            });
+            updateLabel();
+            item.appendChild(link);
+            list.appendChild(item);
+        });
+    },
+
+
     //  This wraps up all the lose ends
     finishLevel: function() {
 
-        //  The manifest keeps every piece. The on-page list groups repeats
-        //  so one missing file used hundreds of times stays one line.
+        //  Display repeated omissions as one text line so filenames remain text.
         var summary = roomLayers.summarizeDropped(this.skippedAssets);
-        var newHtml = '';
+        var missing = [];
         for (var s = 0; s < summary.length; s++) {
             var drop = summary[s];
-            newHtml += drop.filename + ' (' + drop.reason + ')';
-            if (drop.count > 1) newHtml += ' ×' + drop.count;
-            if (drop.url) newHtml += ' ' + drop.url;
-            newHtml += '<br />';
+            var line = drop.filename + ' (' + drop.reason + ')';
+            if (drop.count > 1) line += ' ×' + drop.count;
+            if (drop.url) line += ' ' + drop.url;
+            missing.push(line);
         }
 
-        if (newHtml !== '') {
-            $('.debug').html('<strong>Missing images</strong><br />' + newHtml);
+        if (missing.length) {
+            $('.debug').text('Missing images\n' + missing.join('\n')).css('white-space', 'pre-line');
         } else {
             $('.debug').empty();
         }
@@ -800,6 +867,7 @@ control = {
         var manifest = roomLayers.layerManifest(room, control.currentRoomId, control.skippedAssets.slice(), control.requestedLayers);
         window.__RENDER_LAYERS__ = manifest;
         window.__RENDER_SKIPPED__ = manifest.dropped;
+        this.updateLayerControls(manifest);
 
         if (/[?&]render=1\b/.test(renderParams)) {
             control.renderMode = true;
@@ -820,6 +888,7 @@ control = {
             window.__RENDER_H = Math.round(control.stageHeight * rk);
             window.__RENDER_READY__ = true;
         }
+        if (this.metadataOnly) window.__RENDER_READY__ = true;
 
     },
 
@@ -910,8 +979,12 @@ control = {
 //  This is an example of how you would handle loading in the files from 
 //  github.
 function getRoom(dataJSON) {
-    //  Store the data
-    control.gameObject = dataJSON;
+    var script = document.currentScript;
+    if (!script) return;
+    if (script.parentNode) script.parentNode.removeChild(script);
+    if (script.loadGeneration !== control.loadGeneration) return;
+
+    control.configureLayers(dataJSON);
 
     //  prep the stage
     control.prepStage();

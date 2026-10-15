@@ -68,6 +68,16 @@ test('the default room (no URL hash) exists', () => {
     assert.ok(fs.existsSync(path.join(locationsDir, roomId + '.callback.json')), roomId + '.callback.json missing');
 });
 
+test('the generic sidebar remains alongside the layer visibility controls', () => {
+    const html = fs.readFileSync('index.html', 'utf8');
+    for (const sidebar of ['nameChange', 'globalChat', 'localChat', 'instructions']) {
+        assert.match(html, new RegExp('class="' + sidebar + '"'));
+    }
+    assert.match(html, /class="layerControlsToggle"[^>]*aria-expanded="false">Enable\/disable layers<\/a>/);
+    assert.match(html, /<ul id="layerControls"[^>]*hidden><\/ul>/);
+    assert.doesNotMatch(html, /worldMap|puzzle-workshop\/issues\/14/);
+});
+
 test('scenery image gap (informational - viewer tolerates missing PNGs)', () => {
     const missing = new Set();
     for (const f of roomFiles) {

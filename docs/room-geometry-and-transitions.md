@@ -32,12 +32,19 @@ percent is 0 at the near edge of the room and 1 at the far edge. The
 middleground layer is the gameplay layer (`gameplay: true`).
 
 Add `layers=middleground` or `layers=middleground,sky` to paint only those
-layers. Any other layer is left out of the image queue: its scenery is not
-requested and it gets no canvas. The manifest still lists it, with
-`painted: false`, `canvasId: null`, and `omitReason: "not-requested"`. Its
-decorations are not copied into `dropped`. An id in `layers` that the room
-does not have is listed on `notFound`. Omit `layers` to paint every layer
-that has a size.
+layers. `displayLayers` is an alias. Any other layer is left out of the image
+queue: its scenery is not requested and it gets no canvas. The manifest still
+lists it, with `painted: false`, `canvasId: null`, and
+`omitReason: "not-requested"`. Its decorations are not copied into `dropped`.
+An id in the selection that the room does not have is listed on `notFound`.
+Omit both selection arguments to paint every layer that has a size.
+
+Add `getLayers=1` to publish all layer metadata without creating canvases or
+requesting scenery. This takes precedence over either layer-selection argument.
+
+The right sidebar's **Enable/disable layers** links toggle each painted canvas
+independently. They do not alter the raw canvas or manifest and are hidden in
+render mode.
 
 Scenery is requested only as `img/scenery/<filename>.png`. Flash/SWF files are
 not requested. A missing PNG, a Flash file, or a piece on a layer that cannot
@@ -49,6 +56,16 @@ be painted is still returned to the requester. The list is
 served. The on-page missing-image list groups those entries by filename, so a
 file used many times is one line with a count. The panel scrolls if the unique
 list is still long.
+
+Workshop capture should wait for `__RENDER_READY__`, save the manifest, and
+capture each available canvas in `__RENDER_LAYERS__.layers` using its `canvasId`,
+rather than flattening the page into one PNG. Keep the street even when
+`dropped` is non-empty. Raw canvas PNGs preserve native resolution and
+transparency; `w=` scales only the framed page. CSS layer filters and the stage
+gradient are not baked into raw canvas pixels, so consumers needing the exact
+composite must retain those effects separately or capture styled layers.
+The workshop's `tools/render-rooms.mjs` is not in this repository; its capture
+integration belongs to `ap0ught/puzzle-workshop#38`.
 
 ## Signposts and doors
 The viewer already converts signpost connections and shows them in the Exits

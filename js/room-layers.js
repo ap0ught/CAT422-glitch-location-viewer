@@ -104,10 +104,11 @@
     }
 
     // null means every layer. An object means only those ids are painted.
-    // `?layers=middleground` or `?layers=middleground,sky`.
+    // `?layers=middleground` or `?displayLayers=middleground,sky`.
     function requestedLayerIds(search) {
         if (typeof search !== 'string') return null;
-        var match = /(?:^|[?&])layers=([^&]*)/.exec(search);
+        var match = /(?:^|[?&])layers=([^&]*)/.exec(search) ||
+            /(?:^|[?&])displayLayers=([^&]*)/.exec(search);
         if (!match) return null;
         var ids = {};
         var raw = match[1];

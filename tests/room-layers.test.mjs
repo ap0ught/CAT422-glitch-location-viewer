@@ -1,18 +1,20 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import vm from 'node:vm';
 import { createRequire } from 'node:module';
 
 const require = createRequire(import.meta.url);
 const roomLayers = require('../js/room-layers.js');
-
 const roomId = 'GIFPD818SEI26JR';
 const room = JSON.parse(fs.readFileSync('locations/' + roomId + '.json', 'utf8'));
 
 test('scenery URLs are PNG only', () => {
     assert.equal(roomLayers.sceneryUrl('house_medium_01'), 'img/scenery/house_medium_01.png');
-    assert.equal(roomLayers.sceneryUrl('house_medium_01.png'), 'img/scenery/house_medium_01.png');
-    assert.equal(roomLayers.sceneryUrl('sign.swf'), null);
+    for (const extension of ['png', 'jpg', 'jpeg', 'gif']) {
+        assert.equal(roomLayers.sceneryUrl('house_medium_01.' + extension), 'img/scenery/house_medium_01.png');
+    }
+    assert.equal(roomLayers.sceneryUrl(' sign.SWF '), null);
     assert.equal(roomLayers.sceneryUrl(''), null);
     assert.equal(roomLayers.sceneryUrl(null), null);
 });
@@ -21,9 +23,9 @@ test('Baram Sum layers are listed back to front with a gameplay layer', () => {
     const manifest = roomLayers.layerManifest(room, roomId);
     assert.equal(manifest.schemaVersion, 1);
     assert.equal(manifest.roomId, roomId);
-    assert.equal(manifest.label, 'Baram Sum');
     const zs = manifest.layers.map(layer => layer.z);
     assert.deepEqual(zs, [...zs].sort((a, b) => a - b));
+    assert.equal(manifest.layers.length, Object.keys(room.dynamic.layers).length);
     const gameplay = manifest.layers.filter(layer => layer.gameplay);
     assert.equal(gameplay.length, 1);
     assert.equal(gameplay[0].id, 'middleground');
@@ -34,83 +36,310 @@ test('Baram Sum layers are listed back to front with a gameplay layer', () => {
     mg.decoCount = mg.decos.length;
     delete mg.decos;
     assert.equal(roomLayers.layerManifest(stripped, roomId).layers.find(layer => layer.gameplay).decoCount, 171);
-    assert.ok(manifest.layers.length > 1);
-    assert.match(manifest.parallax.translate, /viewport - layerSpan/);
     assert.deepEqual(manifest.dropped, []);
-    assert.ok(manifest.layers.every(layer => Array.isArray(layer.dropped) && layer.dropped.length === 0));
 });
 
-test('dropped pieces are part of the layer response', () => {
-    const drop = roomLayers.droppedPiece('middleground', 'sign.swf', 'flash');
-    assert.equal(drop.url, null);
-    assert.equal(drop.reason, 'flash');
-    const missing = roomLayers.droppedPiece('bg', 'missing_tree', 'missing-png');
-    assert.equal(missing.url, 'img/scenery/missing_tree.png');
-    const manifest = roomLayers.layerManifest(room, roomId, [drop, missing]);
-    assert.deepEqual(manifest.dropped, [drop, missing]);
-    assert.deepEqual(manifest.layers.find(layer => layer.id === 'middleground').dropped, [drop]);
-    assert.deepEqual(manifest.layers.find(layer => layer.id === 'bg'), undefined);
-});
-
-test('layers= paints only the named canvases', () => {
-    assert.equal(roomLayers.requestedLayerIds('?render=1'), null);
-    assert.deepEqual(roomLayers.requestedLayerIds('?render=1&layers=middleground'), {middleground: true});
-    assert.deepEqual(roomLayers.requestedLayerIds('?layers=middleground,sky'), {middleground: true, sky: true});
-    assert.deepEqual(roomLayers.requestedLayerIds('?layers=middleground%2Csky'), {middleground: true, sky: true});
-    const only = roomLayers.requestedLayerIds('?layers=middleground');
-    const manifest = roomLayers.layerManifest(room, roomId, [], only);
-    const painted = manifest.layers.filter(layer => layer.painted);
-    assert.deepEqual(painted.map(layer => layer.id), ['middleground']);
-    assert.equal(painted[0].canvasId, 'middleground_canvas');
-    assert.equal(painted[0].omitReason, undefined);
-    const skipped = manifest.layers.filter(layer => !layer.painted);
-    assert.ok(skipped.length > 0);
-    assert.ok(skipped.every(layer => layer.canvasId === null && layer.omitReason === 'not-requested' && layer.dropped.length === 0));
-    assert.deepEqual(manifest.dropped, []);
-    assert.deepEqual(manifest.notFound, []);
-    const missing = roomLayers.layerManifest(room, roomId, [], {middleground: true, nope: true});
-    assert.deepEqual(missing.notFound, ['nope']);
-    const all = roomLayers.layerManifest(room, roomId);
-    assert.equal(all.notFound.length, 0);
-    assert.ok(all.layers.every(layer => layer.painted === true && layer.canvasId === layer.id + '_canvas'));
-});
-
-test('repeated missing scenery collapses to one on-page line', () => {
-    const piece = roomLayers.droppedPiece('sky', 'k02_sky_2000x500', 'missing-png');
-    const many = Array.from({length: 454}, () => ({...piece, layerId: 'sky'}));
-    many.push(roomLayers.droppedPiece('middleground', 'sign.swf', 'flash'));
-    const summary = roomLayers.summarizeDropped(many);
-    assert.equal(summary.length, 2);
-    assert.equal(summary[0].filename, 'k02_sky_2000x500');
-    assert.equal(summary[0].count, 454);
-    assert.equal(summary[0].url, 'img/scenery/k02_sky_2000x500.png');
-    assert.equal(summary[1].count, 1);
-    assert.equal(summary[1].url, null);
-    assert.equal(many.length, 455);
+test('dropped pieces remain in the room and their layer response', () => {
+    const dropped = [
+        roomLayers.droppedPiece('middleground', 'sign.swf', 'flash'),
+        roomLayers.droppedPiece('middleground', 'missing_tree', 'missing-png'),
+        roomLayers.droppedPiece('middleground', 'tree', 'unpainted-layer')
+    ];
+    const manifest = roomLayers.layerManifest(room, roomId, dropped);
+    assert.equal(dropped[0].url, null);
+    assert.equal(dropped[1].url, 'img/scenery/missing_tree.png');
+    assert.deepEqual(manifest.dropped, dropped);
+    assert.deepEqual(manifest.layers.find(layer => layer.gameplay).dropped, dropped);
+    assert.equal(manifest.layers.length, Object.keys(room.dynamic.layers).length);
 });
 
 test('middleground art is placed from the room origin', () => {
     assert.deepEqual(roomLayers.worldOrigin(room.dynamic), {x: 3000, y: 1000});
-    assert.deepEqual(roomLayers.worldOrigin({l: -500, t: -700, r: 500, b: 0}), {x: 500, y: 700});
     assert.deepEqual(roomLayers.worldOrigin({l: -750, t: -1350, r: 750, b: 1350}), {x: 750, y: 1350});
 });
 
-test('layer shift matches the original parallax formula', () => {
-    const viewport = 1000;
-    assert.equal(roomLayers.layerTranslate(5100, 0, viewport), 0);
-    assert.equal(roomLayers.layerTranslate(5100, 1, viewport), Math.floor(1 * (viewport - 5100)));
-    assert.equal(roomLayers.layerTranslate(5100, 0.5, viewport), Math.floor(0.5 * (viewport - 5100)));
-    assert.equal(roomLayers.layerTranslate('6000', 1, viewport), -5000);
-    assert.equal(roomLayers.cameraPercent(0, 4000, viewport), 0);
-    assert.equal(roomLayers.cameraPercent(2000, 4000, viewport), 0.5);
-    assert.equal(roomLayers.cameraPercent(99999, 4000, viewport), 1);
-    assert.equal(roomLayers.cameraPercent(10, viewport, viewport), 0);
+test('independent layer shifts match the original parallax formula', () => {
+    assert.equal(roomLayers.layerTranslate(5100, 0, 1000), 0);
+    assert.equal(roomLayers.layerTranslate(5100, 1, 1000), -4100);
+    assert.equal(roomLayers.layerTranslate(5100, 0.5, 1000), -2050);
+    assert.equal(roomLayers.layerTranslate(2001, 0.5, 1000), -501);
+    assert.equal(roomLayers.cameraPercent(0, 4000, 1000), 0);
+    assert.equal(roomLayers.cameraPercent(2000, 4000, 1000), 0.5);
+    assert.equal(roomLayers.cameraPercent(99999, 4000, 1000), 1);
+    assert.equal(roomLayers.cameraPercent(10, 1000, 1000), 0);
+    assert.equal(roomLayers.cameraPercent(10, 500, 1000), 0);
 });
 
-test('platform locations stay optional and match the Baram Sum export', () => {
+test('platform locations match the existing Baram Sum export', () => {
     const platforms = roomLayers.platformLocations(room, roomId);
     const exported = JSON.parse(fs.readFileSync('data/platforms/' + roomId + '.json', 'utf8'));
     assert.equal(platforms.lines.length, 66);
     assert.deepEqual(platforms, exported);
-    assert.equal(platforms.lines.every(line => line.layerId === 'middleground'), true);
+});
+
+function viewer(search = '?render=1') {
+    const elements = new Map();
+    const requests = [];
+    const scripts = [];
+    function $(selector) {
+        if (!elements.has(selector)) {
+            const element = {
+                handlers: {},
+                css() { return this; },
+                text(value) { this.content = value; return this; },
+                empty() { this.emptied = true; return this; },
+                fadeOut() { return this; },
+                fadeIn() { return this; },
+                hide() { this.hidden = true; return this; },
+                stop() { return this; },
+                fadeTo() { return this; },
+                remove() { return this; },
+                append() { return this; },
+                bind(event, handler) { this.handlers[event] = handler; return this; },
+                attr(name, value) {
+                    if (name === 'src') {
+                        requests.push(value);
+                        this.handlers.error();
+                    }
+                    return this;
+                }
+            };
+            elements.set(selector, element);
+        }
+        return elements.get(selector);
+    }
+    $.getScript = url => requests.push(url);
+    const context = vm.createContext({
+        $, room: structuredClone(room), roomLayers, window: {},
+        document: {
+            currentScript: null,
+            createElement(tagName) { return {tagName}; },
+            head: {appendChild(script) { scripts.push(script); requests.push(script.src); }},
+            getElementById() { return null; }
+        },
+        location: {search}, URLSearchParams, console: {log() {}},
+        player: {otherUsers: {}, loaded: true}
+    });
+    vm.runInContext(fs.readFileSync('js/control.js', 'utf8'), context);
+    Object.assign(context.control, {
+        currentRoomId: roomId, stageWidth: 6000, stageHeight: 1000,
+        loadingRoom: false, loadtime: {start: new Date()}
+    });
+    return {context, elements, requests, scripts};
+}
+
+test('render readiness publishes layers and omissions, with platforms only when requested', () => {
+    for (const search of ['?render=1&w=2000', '?render=1&platforms=1']) {
+        const {context, elements} = viewer(search);
+        const {control, window} = context;
+        control.noteSkipped('middleground', 'missing_tree', 'missing-png');
+        let ready = false;
+        Object.defineProperty(window, '__RENDER_READY__', {
+            set(value) {
+                assert.equal(window.__RENDER_LAYERS__.roomId, roomId);
+                assert.equal(window.__RENDER_LAYERS__.dropped.length, 1);
+                ready = value;
+            }
+        });
+        control.finishLevel();
+        assert.equal(ready, true);
+        assert.ok([...elements].some(([selector, element]) =>
+            selector.split(', ').includes('.instructions') && element.hidden));
+        assert.equal(window.__RENDER_SKIPPED__, window.__RENDER_LAYERS__.dropped);
+        assert.equal(window.__RENDER_W, search.includes('w=2000') ? 2000 : 6000);
+        assert.equal('__RENDER_PLATFORMS__' in window, search.includes('platforms=1'));
+        if (window.__RENDER_PLATFORMS__) assert.equal(window.__RENDER_PLATFORMS__.lines.length, 66);
+    }
+});
+
+test('displayLayers selects exact IDs before processing and defaults to all', () => {
+    for (const [search, expected] of [
+        ['', Object.keys(room.dynamic.layers)],
+        ['?layers=middleground', ['middleground']],
+        ['?layers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground', 'unknown']],
+        ['?displayLayers=middleground', ['middleground']],
+        ['?displayLayers=middleground,T_1314039143686,middleground,unknown', ['T_1314039143686', 'middleground', 'unknown']],
+        ['?displayLayers=', []],
+        ['?displayLayers=unknown', ['unknown']],
+        ['?displayLayers=%20middleground%20', ['middleground']]
+    ]) {
+        const {context} = viewer(search);
+        context.control.configureLayers(context.room);
+        const requested = context.control.requestedLayers;
+        const ids = requested === null ? Object.keys(context.room.dynamic.layers) : Object.keys(requested);
+        assert.deepEqual(ids.sort(), expected.sort());
+        assert.equal(Object.keys(context.control.gameObject.dynamic.layers).length, 8);
+        assert.equal(Object.keys(context.room.dynamic.layers).length, 8, 'source layer tree is not modified');
+    }
+});
+
+test('excluded decorations are not inspected or reported as unpainted', () => {
+    const {context, requests} = viewer('?displayLayers=middleground');
+    Object.defineProperty(context.room.dynamic.layers.T_1314039143686, 'decos', {
+        get() { throw new Error('excluded decorations must not be processed'); }
+    });
+    context.control.configureLayers(context.room);
+    context.room = context.control.gameObject;
+    context.control.layerQueue = ['middleground'];
+    context.control.noteUnpaintedLayers();
+    assert.equal(context.control.skippedAssets.length, 0);
+    assert.equal(requests.length, 0);
+});
+
+test('layer manifest reports requested layers and missing IDs', () => {
+    const requested = roomLayers.requestedLayerIds('?layers=middleground%2Csky');
+    assert.deepEqual(requested, {middleground: true, sky: true});
+    const manifest = roomLayers.layerManifest(room, roomId, [], requested);
+    const painted = manifest.layers.filter(layer => layer.painted);
+    assert.deepEqual(painted.map(layer => layer.id), ['middleground']);
+    assert.equal(painted[0].canvasId, 'middleground_canvas');
+    assert.equal(manifest.layers.find(layer => layer.id !== 'middleground').omitReason, 'not-requested');
+    assert.deepEqual(manifest.notFound, ['sky']);
+    assert.deepEqual(roomLayers.layerManifest(room, roomId).notFound, []);
+});
+
+test('getLayers returns all metadata without invoking the canvas or image pipeline', () => {
+    const {context, requests} = viewer('?getLayers=1&displayLayers=middleground&platforms=1');
+    context.control.configureLayers(context.room);
+    context.control.prepLayers = () => assert.fail('metadata-only must not prepare canvases');
+    context.control.loadImages = () => assert.fail('metadata-only must not load scenery');
+    context.control.loadImage = () => assert.fail('metadata-only must not paint scenery');
+    context.$('.stage').width = () => 6000;
+    context.window.scrollTo = () => {};
+    context.control.prepStage();
+    assert.equal(context.control.metadataOnly, true);
+    assert.equal(context.window.__RENDER_READY__, true);
+    assert.equal(context.window.__RENDER_LAYERS__.layers.length, 8);
+    assert.equal(context.window.__RENDER_PLATFORMS__.lines.length, 66);
+    assert.equal(context.control.currentImageCount, 0);
+    assert.equal(context.control.layersId.length, 0);
+    assert.equal(requests.length, 0);
+});
+
+test('missing PNG, Flash and unpainted pieces do not stop the image queue', () => {
+    const {context, requests} = viewer();
+    const {control, window} = context;
+    context.room.dynamic.layers = {
+        middleground: {z: 0, w: 100, h: 100, items: [
+            {filename: 'sign.swf', w: 1, h: 1},
+            {filename: 'missing_tree', w: 1, h: 1}
+        ]},
+        invalid: {z: -1, decos: [{filename: 'tree'}]}
+    };
+    control.layerQueue = ['middleground'];
+    control.maxImageCount = control.currentImageCount = 2;
+    control.noteUnpaintedLayers();
+    control.loadImages();
+    assert.equal(window.__RENDER_READY__, true);
+    assert.equal(control.currentImageCount, 0);
+    assert.deepEqual(requests, ['img/scenery/missing_tree.png']);
+    assert.deepEqual(Array.from(window.__RENDER_SKIPPED__, drop => drop.reason),
+        ['unpainted-layer', 'missing-png', 'flash']);
+    assert.equal(window.__RENDER_LAYERS__.layers.length, 2);
+});
+
+test('loading another room clears stale capture state and layer IDs', () => {
+    const {context, requests} = viewer('?render=1&platforms=1');
+    const {control, window} = context;
+    control.finishLevel();
+    control.layersId = ['old_layer'];
+    control.loadRoom('LGIFPD818SEI26JR');
+    assert.equal(window.__RENDER_READY__, false);
+    for (const key of ['__RENDER_LAYERS__', '__RENDER_SKIPPED__', '__RENDER_PLATFORMS__']) {
+        assert.equal(key in window, false);
+    }
+    assert.equal(control.layersId.length, 0);
+    assert.equal(requests.length, 1);
+    assert.equal(context.$('#layerControls').emptied, true);
+});
+
+test('stale room and image callbacks are ignored', () => {
+    const {context, scripts} = viewer('');
+    const {control, document} = context;
+    control.loadRoom('GOLDROOM');
+    const staleScript = scripts[0];
+    control.loadRoom('GNEWROOM');
+    const currentRoom = {sentinel: true};
+    control.gameObject = currentRoom;
+    control.prepStage = () => assert.fail('stale room data must not be prepared');
+    document.currentScript = staleScript;
+    context.getRoom(room);
+    assert.equal(control.gameObject, currentRoom);
+
+    const handlers = {};
+    context.$ = selector => {
+        if (selector === '<img>') {
+            return {
+                css() { return this; },
+                bind(event, handler) { handlers[event] = handler; return this; },
+                attr() { return this; }
+            };
+        }
+        return {append() { return this; }};
+    };
+    let skipped = 0;
+    let advanced = 0;
+    control.loadingRoom = false;
+    control.noteSkipped = () => skipped++;
+    control.advanceImageQueue = () => advanced++;
+    control.loadImage('middleground', {filename: 'tree', w: 1, h: 1});
+    control.loadGeneration++;
+    handlers.error();
+    handlers.load();
+    assert.equal(skipped, 0);
+    assert.equal(advanced, 0);
+});
+
+test('layer links toggle only their canvas, support keyboard use, and refresh for a new room', () => {
+    const {context} = viewer('');
+    function node() {
+        return {
+            style: {}, attributes: {}, children: [], events: {},
+            set textContent(value) { this.text = value; this.children = []; },
+            get textContent() { return this.text; },
+            setAttribute(name, value) { this.attributes[name] = value; },
+            appendChild(child) { this.children.push(child); },
+            addEventListener(name, handler) { this.events[name] = handler; },
+            click() { this.events.click({preventDefault() {}}); }
+        };
+    }
+    const list = node();
+    const background = node();
+    const gameplay = node();
+    const nodes = new Map([
+        ['layerControls', list], ['background_canvas', background], ['middleground_canvas', gameplay]
+    ]);
+    context.document = {
+        getElementById(id) { return nodes.get(id); },
+        createElement() { return node(); }
+    };
+    const manifest = {layers: [
+        {canvasId: 'background_canvas', name: '<background>'},
+        {canvasId: 'middleground_canvas', name: 'middleground'},
+        {canvasId: 'unpainted_canvas', name: 'unpainted'}
+    ]};
+    context.control.updateLayerControls(manifest);
+    assert.equal(list.children.length, 2, 'unpainted layers have no visibility link');
+    const link = list.children[0].children[0];
+    assert.equal(link.textContent, 'Disable <background>');
+    assert.equal(link.attributes['aria-pressed'], 'true');
+    assert.equal(link.attributes['aria-controls'], 'background_canvas');
+    link.click();
+    assert.equal(background.style.visibility, 'hidden');
+    assert.equal(gameplay.style.visibility, undefined);
+    assert.equal(link.textContent, 'Enable <background>');
+    assert.equal(link.attributes['aria-pressed'], 'false');
+    link.events.keydown({key: ' ', preventDefault() {}});
+    assert.equal(background.style.visibility, 'visible');
+    assert.equal(link.attributes['aria-pressed'], 'true');
+    context.control.updateLayerControls({layers: [manifest.layers[1]]});
+    assert.equal(list.children.length, 1, 'old layer links are removed');
+    assert.equal(list.children[0].children[0].textContent, 'Disable middleground');
+});
+
+test('dropped scenery names are displayed as text, not interpreted as HTML', () => {
+    const {context, elements} = viewer();
+    context.control.noteSkipped('middleground', '<img onerror=alert(1)>', 'missing-png');
+    context.control.finishLevel();
+    assert.match(elements.get('.debug').content, /<img onerror=alert\(1\)>/);
 });

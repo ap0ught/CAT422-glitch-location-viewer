@@ -261,6 +261,7 @@ html.render-capture .stage_holder {
     border: 1px solid #DDD;
     border-radius: 6px;
     padding: 6px;
+    overflow-y: auto;
     text-align: center;
     background: rgba(255, 255, 255, 0.75);
 }
